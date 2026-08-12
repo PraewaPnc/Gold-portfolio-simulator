@@ -1,19 +1,21 @@
 # Gold Portfolio Simulator
 
-เคสศึกษา **"การจัดสรรเงินลงทุนในทองคำ"** — เว็บแอปที่ตอบคำถามว่าทองคำควรมีสัดส่วนเท่าไรในพอร์ต
-โดยใช้ราคาย้อนหลังจริงของทองคำ หุ้นไทย และตราสารหนี้ ย้อนหลัง 18.5 ปี
-มาขับเคลื่อน Monte Carlo simulation แทนการใช้ตัวเลขสมมติฐาน
+A case study answering **"how much gold belongs in a portfolio?"** — a web app driven by
+18.5 years of real historical prices for gold, Thai equity and bonds, feeding a Monte Carlo
+simulation instead of assumed figures.
 
-## โครงสร้าง
+The web app's interface is in Thai; all documentation is in English.
 
-| ไฟล์ / โฟลเดอร์ | คำอธิบาย |
+## Layout
+
+| Path | Description |
 | --- | --- |
-| [`gold-case-study/`](gold-case-study/) | โปรเจกต์หลัก — **เริ่มอ่านที่ [README ของโปรเจกต์](gold-case-study/README.md)** |
-| `gold-case-study/data-pipeline/` | Python: ดึงและประมวลผลราคาย้อนหลังจริง |
+| [`gold-case-study/`](gold-case-study/) | The project — **start with the [project README](gold-case-study/README.md)** |
+| `gold-case-study/data-pipeline/` | Python: fetches and processes real historical prices |
 | `gold-case-study/web/` | Next.js 14 + TypeScript + Tailwind + Recharts |
-| `gold-portfolio-simulator.jsx` | ต้นแบบเวอร์ชันแรก (ตัวเลขสมมติฐาน) เก็บไว้อ้างอิงที่มาของดีไซน์ |
+| `gold-portfolio-simulator.jsx` | The original prototype (assumed figures), kept as the design reference |
 
-## เริ่มใช้งานเร็ว
+## Quick start
 
 ```bash
 cd gold-case-study/web
@@ -21,19 +23,19 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-ข้อมูล JSON ถูก commit ไว้แล้ว จึงรันเว็บได้ทันทีโดยไม่ต้องรัน data pipeline
-วิธีอัปเดตข้อมูลให้เป็นปัจจุบันอยู่ใน [`data-pipeline/README.md`](gold-case-study/data-pipeline/README.md)
+The generated JSON is committed, so the site runs without running the data pipeline first.
+See [`data-pipeline/README.md`](gold-case-study/data-pipeline/README.md) to refresh the data.
 
-## แหล่งข้อมูล
+## Data sources
 
-| สินทรัพย์ | แหล่ง | สถานะ |
+| Asset | Source | Status |
 | --- | --- | --- |
-| ทองคำ | `GC=F` × `USDTHB=X` (Yahoo Finance) | ข้อมูลจริง (futures ใกล้เคียง spot) |
-| หุ้นไทย | `TDEX.BK` — ThaiDEX SET50 ETF | **proxy** ของดัชนี SET |
-| ตราสารหนี้ | `DGS10` — US 10Y Treasury (FRED) | **proxy** ของพันธบัตรไทย |
+| Gold | `GC=F` × `USDTHB=X` (Yahoo Finance) | Real data (futures, tracks spot closely) |
+| Thai equity | `TDEX.BK` — ThaiDEX SET50 ETF | **Proxy** for the SET index |
+| Bonds | `DGS10` — US 10Y Treasury (FRED) | **Proxy** for Thai government bonds |
 
-เหตุผลที่ต้องใช้ proxy และข้อจำกัดทั้งหมดอธิบายไว้ใน
-[README ของโปรเจกต์](gold-case-study/README.md#ทำไมต้องใช้-proxy)
+Why proxies are necessary, and every limitation that follows from them, is documented in the
+[project README](gold-case-study/README.md#why-proxies-are-used).
 
-> เคสศึกษานี้จัดทำเพื่อการศึกษาเท่านั้น ไม่ใช่คำแนะนำการลงทุน
-> ผลตอบแทนในอดีตไม่ได้รับประกันผลตอบแทนในอนาคต
+> This is an educational case study, not investment advice.
+> Past performance does not guarantee future results.

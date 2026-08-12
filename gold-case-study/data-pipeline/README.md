@@ -1,21 +1,22 @@
 # Data pipeline
 
-ดึงราคาย้อนหลังจริงของสินทรัพย์ 3 ประเภท แล้วคำนวณสถิติที่เว็บแอปใช้ขับเคลื่อน Monte Carlo simulation
+Fetches real price history for three asset classes and computes the statistics that drive the
+Monte Carlo simulation in the web app.
 
-Pipeline แบ่งเป็น 2 ขั้นที่แยกจากกันชัดเจน และสื่อสารกันผ่านไฟล์ CSV ใน `raw/`
+The pipeline is split into two independent stages that communicate through CSV files in `raw/`:
 
-| ขั้น | สคริปต์ | หน้าที่ | ผลลัพธ์ |
+| Stage | Script | Responsibility | Output |
 | --- | --- | --- | --- |
-| 1 | `fetch_data.py` | ดึงข้อมูลดิบจากอินเทอร์เน็ต | `raw/*.csv` + `raw/manifest.json` |
-| 2 | `compute_stats.py` | ประมวลผลเป็นสถิติและ time series | `../web/data/*.json` |
+| 1 | `fetch_data.py` | Download raw data from the internet | `raw/*.csv` + `raw/manifest.json` |
+| 2 | `compute_stats.py` | Turn it into statistics and time series | `../web/data/*.json` |
 
-การแยกแบบนี้ทำให้แก้สูตรคำนวณแล้วรัน `compute_stats.py` ซ้ำได้ทันที โดยไม่ต้องดึงข้อมูลใหม่
+The split means you can change a formula and re-run stage 2 immediately without re-downloading.
 
 ---
 
-## ติดตั้ง
+## Install
 
-ต้องมี Python 3.10 ขึ้นไป
+Requires Python 3.10+.
 
 ```bash
 cd data-pipeline
@@ -24,16 +25,17 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## รัน
+## Run
 
 ```bash
-python fetch_data.py               # ดึงข้อมูลตั้งแต่ 2005-01-01 ถึงปัจจุบัน
-python compute_stats.py            # ประมวลผลและเขียน JSON ให้เว็บแอป
+python fetch_data.py               # Fetch from 2005-01-01 to today
+python compute_stats.py            # Process and write JSON for the web app
 ```
 
-รันซ้ำได้เรื่อย ๆ เพื่ออัปเดตข้อมูลให้เป็นปัจจุบัน — ไฟล์เดิมจะถูกเขียนทับทั้งหมด
+Both scripts are idempotent — re-run them any time to refresh the data; existing files are
+overwritten.
 
-กำหนดวันเริ่มต้นเองได้:
+Custom start date:
 
 ```bash
 python fetch_data.py --start 2010-01-01
@@ -41,91 +43,117 @@ python fetch_data.py --start 2010-01-01
 
 ---
 
-## แหล่งข้อมูลของแต่ละสินทรัพย์
+## Sources
 
-### 1. ทองคำ — ราคาตลาดโลกแปลงเป็นเงินบาท
+### 1. Gold — global price converted to THB
 
 ```
-ราคาทองคำ (บาท/ทรอยออนซ์) = GC=F (USD/ounce) × USDTHB=X
+Gold price (THB/troy oz) = GC=F (USD/oz) × USDTHB=X
 ```
 
-- `GC=F` — COMEX Gold Futures สัญญาต่อเนื่อง จาก Yahoo Finance
-- `USDTHB=X` — อัตราแลกเปลี่ยน USD/THB จาก Yahoo Finance
-- ถ้า `GC=F` ใช้ไม่ได้ สคริปต์จะ fallback ไป `GLD` แล้ว `IAU` ตามลำดับ
+- `GC=F` — COMEX Gold Futures continuous contract, from Yahoo Finance
+- `USDTHB=X` — USD/THB exchange rate, from Yahoo Finance
+- If `GC=F` is unavailable the script falls back to `GLD`, then `IAU`
 
-**ข้อจำกัด:** นี่คือราคาทองคำตลาดโลก ไม่ใช่ราคาทองคำแท่ง 96.5% ของสมาคมค้าทองคำ
-ซึ่งไม่มี API สาธารณะให้ดึงข้อมูลย้อนหลัง ราคาในประเทศเคลื่อนไหวใกล้เคียงกัน
-แต่มีส่วนต่างจากค่าพรีเมียมและความบริสุทธิ์ที่ต่างกัน
+**Limitation:** this is the global gold price, not the domestic 96.5% bullion price quoted by the
+Gold Traders Association, which has no public API for historical data. Domestic prices track it
+closely but differ by premium and purity.
 
-### 2. หุ้นไทย — ETF อ้างอิงดัชนี SET50
+There is also no free, scriptable source for true spot (XAU/USD): Yahoo has no `XAUUSD=X` ticker,
+stooq requires solving a JavaScript proof-of-work challenge, and FRED has removed its LBMA gold
+fixing series (`GOLDPMGBD228NLBM` now returns 404). Front-month futures is the closest available
+stand-in and typically differs from spot by under 1%.
 
-- `TDEX.BK` — ThaiDEX SET50 ETF ซื้อขายในตลาดหลักทรัพย์ไทย **เป็นสกุลเงินบาทอยู่แล้ว**
-  จึงไม่ต้องแปลงค่าเงิน และใช้ `auto_adjust=True` เพื่อให้รวมผลของเงินปันผล (total return)
-- Fallback: `BSET50.BK` แล้ว `THD` (iShares MSCI Thailand ETF — เป็น USD จะถูกแปลงเป็นบาทอัตโนมัติ)
+### 2. Thai equity — SET50 tracker ETF
 
-**ข้อจำกัด:** ทีมได้ตรวจสอบ ticker ของดัชนี SET โดยตรงบน Yahoo Finance แล้ว —
-`^SET.BK` คืนค่าเฉพาะราคาล่าสุดเพียงจุดเดียว ไม่มี time series ย้อนหลัง
-ส่วน `^SETI` และ `^SET50` ไม่มีข้อมูลเลย จึงไม่สามารถใช้ดัชนี SET ตรง ๆ ได้
-SET50 ครอบคลุมหุ้นขนาดใหญ่ 50 ตัวแรก มีทิศทางใกล้เคียงดัชนี SET แต่ไม่รวมหุ้นขนาดกลาง-เล็ก
-ข้อมูลเริ่มต้นปี 2008 ซึ่งเป็นตัวกำหนดจุดเริ่มต้นของช่วงข้อมูลร่วมทั้งหมด
+- `TDEX.BK` — ThaiDEX SET50 ETF, listed in Bangkok and therefore **already denominated in THB**,
+  so no currency conversion is needed. `auto_adjust=True` makes it a total-return series
+  including dividends.
+- Fallbacks: `BSET50.BK`, then `THD` (iShares MSCI Thailand ETF — priced in USD, converted
+  automatically).
 
-### 3. ตราสารหนี้ — พันธบัตร 10 ปี (proxy สหรัฐฯ)
+**Limitation:** the SET index tickers on Yahoo Finance were tested and none are usable —
+`^SET.BK` returns only a single current quote with no history, and `^SETI` and `^SET50` return
+nothing at all. SET50 covers the 50 largest listed companies, so it tracks the SET closely but
+excludes mid- and small-caps. Its history starts in 2008, which sets the start of the common
+window for all three assets.
 
-- `DGS10` จาก FRED (Federal Reserve Bank of St. Louis) ผ่าน CSV endpoint สาธารณะ ไม่ต้องใช้ API key
+### 3. Bonds — 10-year government yield (US proxy)
 
-**ข้อจำกัด:** ไม่มี API ฟรีที่เข้าถึงได้สำหรับอัตราผลตอบแทนพันธบัตรรัฐบาลไทยอายุ 10 ปี
-(ThaiBMA และ Bank of Thailand ต้องลงทะเบียนหรือใช้ API key) จึงใช้พันธบัตรรัฐบาลสหรัฐฯ แทน
-**ตัวเลขตราสารหนี้ทั้งหมดในเคสศึกษานี้จึงเป็นข้อมูล proxy** และมีการระบุไว้ชัดเจนในเว็บแอป
+- `DGS10` from FRED (Federal Reserve Bank of St. Louis), via the public CSV endpoint — no API key
+  required.
 
-หากต้องการเปลี่ยนไปใช้ข้อมูลไทยจริง: เขียนไฟล์ `raw/bond_yield.csv` ให้มีคอลัมน์
-`date,yield_pct` (yield เป็นหน่วยเปอร์เซ็นต์ เช่น `3.45`) แล้วรัน `compute_stats.py` ใหม่ —
-ไม่ต้องแก้โค้ดคำนวณเลย
+**Limitation:** no free API exists for Thai 10-year government bond yields (ThaiBMA and the Bank
+of Thailand both require registration or an API key), so US Treasuries are used instead.
+**Every bond figure in this case study is therefore proxy data**, and it is labelled as such in
+the web app.
+
+To switch to real Thai data: write `raw/bond_yield.csv` with columns `date,yield_pct` (yield in
+percent, e.g. `3.45`) and re-run `compute_stats.py`. No code changes are required.
 
 ---
 
-## หมายเหตุเรื่องวิธีคำนวณ
+## Methodology notes
 
-### แปลง yield เป็นผลตอบแทนของนักลงทุน
+### Turning yields into investor returns
 
-อัตราผลตอบแทนพันธบัตร (yield) **ไม่ใช่** ผลตอบแทนที่นักลงทุนได้รับ — เมื่อ yield ขึ้น ราคาพันธบัตรลง
-สคริปต์จึงสร้าง "ดัชนีผลตอบแทนรวม" ด้วยสูตรมาตรฐาน carry + duration + convexity รายเดือน:
+A bond yield is **not** the return an investor earns — when yields rise, prices fall. The script
+builds a total-return index using the standard carry + duration + convexity decomposition:
 
 ```
-r(t) = y(t-1)/12  −  D_mod × Δy  +  0.5 × C × Δy²
+r(t) = y(t-1)/periods  −  D_mod × Δy  +  0.5 × C × Δy²
 ```
 
-โดย `D_mod` (modified duration) และ `C` (convexity) คำนวณใหม่ทุกเดือนจากพันธบัตรราคาพาร์
-อายุ 10 ปี ที่จ่ายคูปองเท่ากับ yield ณ เวลานั้น (ฟังก์ชัน `par_bond_duration_convexity`)
+`D_mod` (modified duration) and `C` (convexity) are recomputed every period from a par bond with
+10 years to maturity paying a coupon equal to the prevailing yield — see
+`par_bond_duration_convexity`.
 
-ผลลัพธ์ที่ได้มีความผันผวนราว 7.5% ต่อปี ซึ่งสอดคล้องกับ ETF พันธบัตรจริงอย่าง `IEF`
-(7–10 ปี, ผันผวนราว 6.5%) โดยสูงกว่าเล็กน้อยตามที่ควรเป็น เพราะ duration ยาวกว่า
+The result has roughly 7.5% annualised volatility, consistent with a real bond ETF such as `IEF`
+(7–10 year, about 6.5%) and slightly higher as expected, since its duration is longer.
 
-### arithmetic mean กับ CAGR
+### Arithmetic mean vs CAGR
 
-ไฟล์ `asset-stats.json` มีผลตอบแทน 2 ตัวที่ต่างกันโดยตั้งใจ:
+`asset-stats.json` deliberately carries two different return figures:
 
-- **`annualReturn`** — arithmetic mean ของผลตอบแทนรายเดือน × 12
-  ใช้เป็น input ของ Monte Carlo เพราะการสุ่มจากการแจกแจงปกติต้องใช้ค่านี้จึงจะไม่เกิด bias
-- **`cagr`** — ผลตอบแทนทบต้นที่เกิดขึ้นจริง ใช้แสดงในตารางอ้างอิง
+- **`annualReturn`** — arithmetic mean of monthly returns × 12. This is the Monte Carlo input,
+  because sampling from a normal distribution requires the arithmetic mean to avoid bias.
+- **`cagr`** — the compound growth actually realised, used in the reference tables.
 
-`annualReturn` จะสูงกว่า `cagr` เสมอ ส่วนต่างมาจาก volatility drag ซึ่งเป็นเรื่องปกติ
+`annualReturn` is always higher than `cagr`; the gap is volatility drag and is expected.
 
-### เดือนสุดท้ายที่ยังไม่จบ
+### CAGR denominator
 
-การ resample เป็นรายเดือนจะตีตราวันสุดท้ายของเดือนเสมอ แม้ข้อมูลจริงจะมีถึงกลางเดือน
-สคริปต์จึงเปลี่ยนป้ายวันที่ของจุดสุดท้ายให้ตรงกับวันที่มีข้อมูลจริง และ**ไม่นำเดือนที่ยังไม่จบ
-ไปคำนวณสถิติ** (จะยังแสดงในกราฟ) — ดูค่า `dataRange.excludedPartialFinalMonth` ใน JSON
+N monthly observations span N−1 months of elapsed time, so CAGR is annualised over
+`(N−1)/12` years, not `N/12`. The reported `months` field is the elapsed count, so
+`months / 12 == years` holds exactly.
+
+### Weekly series for charts, monthly for statistics
+
+The chart offers 6-month and 1-year ranges, which monthly data cannot support — they would show
+only 7 and 13 points. The chart therefore uses a weekly series (971 points; 26 points over
+6 months), while **statistics stay monthly** because monthly returns give more stable volatility
+and correlation estimates and are less sensitive to weekly noise.
+
+`build_frame(rule, periods_per_year)` produces both frequencies from the same code path; the bond
+index computes its carry per period according to the frequency passed in.
+
+### Incomplete final month
+
+Resampling to month-end always stamps the last day of the month, even when the underlying data
+only runs to mid-month. The script relabels that final point with the real observation date and
+**excludes the incomplete month from the statistics** while still showing it in the chart — see
+`dataRange.excludedPartialFinalMonth` in the JSON.
 
 ---
 
-## ไฟล์ผลลัพธ์
+## Output files
 
 ### `../web/data/price-history.json`
 
 ```jsonc
 {
   "meta": { "generatedAt": "...", "normalizedBase": 100, "dataRange": { ... } },
-  "latest": {                      // ระดับราคาจริง เฉพาะจุดล่าสุด
+  "latest": {                      // real price levels, latest point only
     "date": "2026-08-07",
     "goldUsdPerOz": 4340.7,
     "goldThbPerOz": 143677.17,
@@ -133,23 +161,22 @@ r(t) = y(t-1)/12  −  D_mod × Δy  +  0.5 × C × Δy²
     "bondYieldPct": 4.65,
     "usdthb": 33.1
   },
-  "series": [                      // รายสัปดาห์ (ราคาปิดวันศุกร์)
+  "series": [                      // weekly (Friday close) — drives the chart
     { "date": "2008-01-04", "gold": 100, "equity": 100, "bond": 100 }
+  ],
+  "monthly": [                     // monthly — drives the per-asset data tables
+    {
+      "date": "2008-01-31",
+      "gold": 100, "equity": 100, "bond": 100,
+      "goldUsdPerOz": 922.7, "goldThbPerOz": 28628.61,
+      "equityClose": 3.2768, "bondYieldPct": 3.67
+    }
   ]
 }
 ```
 
-**ทำไม series เป็นรายสัปดาห์ แต่สถิติเป็นรายเดือน**
-
-กราฟบนหน้าเว็บมีตัวเลือกช่วง 6 เดือน / 1 ปี ซึ่งถ้าใช้ข้อมูลรายเดือนจะเหลือแค่ 7 และ 13 จุด —
-น้อยเกินกว่าจะดูทิศทางได้ จึงใช้รายสัปดาห์กับกราฟ (971 จุด, ช่วง 6 เดือนได้ 27 จุด)
-
-ส่วน**สถิติยังคำนวณจากรายเดือน** เพราะให้ค่า volatility และ correlation ที่เสถียรกว่า
-และไม่อ่อนไหวต่อ noise รายสัปดาห์ ฟังก์ชัน `build_frame(rule, periods_per_year)` สร้างทั้งสองความถี่
-จากโค้ดชุดเดียวกัน (ดัชนีตราสารหนี้คำนวณ carry ต่อคาบตามความถี่ที่ส่งเข้าไป)
-
-`series` เก็บเฉพาะดัชนีฐาน 100 ส่วนระดับราคาจริงแยกไว้ใน `latest` เพราะเว็บใช้แค่จุดล่าสุด —
-ทำให้ไฟล์ที่ถูก bundle เข้าไปในหน้าเว็บเล็กลงจาก 220 KB เหลือ 108 KB
+`series` carries only the index values the chart needs; keeping the real price levels out of it
+and in `latest` instead is what keeps the file bundled into the page reasonably small.
 
 ### `../web/data/asset-stats.json`
 
@@ -158,20 +185,21 @@ r(t) = y(t-1)/12  −  D_mod × Δy  +  0.5 × C × Δy²
   "meta": { "dataRange": { ... }, "riskFreeRate": 0.015, ... },
   "assets": {
     "gold": {
-      "annualReturn": 0.0959,     // arithmetic — ใช้ใน Monte Carlo
+      "annualReturn": 0.0959,     // arithmetic — the Monte Carlo input
       "annualVolatility": 0.1539,
-      "cagr": 0.0871,
+      "cagr": 0.0875,
       "maxDrawdown": -0.3057,
       "bestYear": { ... }, "worstYear": { ... },
       "calendarYearReturns": { "2008": ..., ... }
     },
     "equity": { ... }, "bond": { ... }
   },
+  "trailingReturns": [ ... ],  // 1y / 5y / 10y / all, per asset
   "correlation": { "gold": { "equity": 0.02, ... }, ... },
-  "sources": { ... },      // ticker, provider, ช่วงข้อมูล, ธง isProxy, ข้อจำกัด
-  "disclaimers": [ ... ]   // เว็บแอปนำไปแสดงใน footer โดยตรง
+  "sources": { ... },          // ticker, provider, range, isProxy flag, limitations
+  "disclaimers": [ ... ]       // rendered directly in the site footer
 }
 ```
 
-`sources` และ `disclaimers` ถูกออกแบบให้เว็บแอปอ่านไปแสดงผลได้ตรง ๆ
-เมื่อเปลี่ยนแหล่งข้อมูล (เช่น fallback ไป ticker อื่น) หน้าเว็บจะอัปเดตข้อความตามอัตโนมัติ
+`sources` and `disclaimers` are written so the web app can render them verbatim. If a source
+changes — for example a fallback ticker kicks in — the site's wording updates automatically.

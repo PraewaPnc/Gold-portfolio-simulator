@@ -1,37 +1,39 @@
-# เคสศึกษา: การจัดสรรเงินลงทุนในทองคำ
+# Gold Allocation Case Study
 
-เว็บแอปเคสศึกษาที่ตอบคำถาม *"ทองคำควรมีสัดส่วนเท่าไรในพอร์ตการลงทุน"*
-ด้วยข้อมูลราคาย้อนหลังจริง ไม่ใช่ตัวเลขสมมติฐาน
+A web app answering *"how much gold belongs in a portfolio?"* using real historical prices
+rather than assumed figures.
 
-โปรเจกต์แบ่งเป็น 2 ชั้นที่แยกกันชัดเจน:
+The project has two clearly separated layers:
 
 ```
 gold-case-study/
-├── data-pipeline/          # ชั้นข้อมูล — Python
-│   ├── fetch_data.py       #   ดึงราคาย้อนหลังจริง → raw/*.csv
-│   ├── compute_stats.py    #   ประมวลผล → web/data/*.json
+├── data-pipeline/          # Data layer — Python
+│   ├── fetch_data.py       #   Fetches real price history → raw/*.csv
+│   ├── compute_stats.py    #   Processes it → web/data/*.json
 │   ├── requirements.txt
-│   ├── README.md           #   รายละเอียดแหล่งข้อมูลและวิธีคำนวณ
-│   └── raw/                #   ข้อมูลดิบ (สร้างโดย fetch_data.py)
+│   ├── README.md           #   Source details and calculation methodology
+│   └── raw/                #   Raw data (created by fetch_data.py)
 │
-└── web/                    # ชั้นนำเสนอ — Next.js 14 + TypeScript + Tailwind
+└── web/                    # Presentation layer — Next.js 14 + TypeScript + Tailwind
     ├── app/
-    │   ├── page.tsx            # หน้า Home — ภาพรวมเคสศึกษา
-    │   ├── reference/page.tsx  # หน้าข้อมูลย้อนหลัง — กราฟ + สถิติ + แหล่งข้อมูล
-    │   └── simulation/page.tsx # หน้าจำลอง Monte Carlo
+    │   ├── page.tsx                    # Home — case study overview
+    │   ├── reference/page.tsx          # Historical data — chart, stats, sources
+    │   ├── reference/[asset]/page.tsx  # Per-asset detail and data tables
+    │   └── simulation/page.tsx         # Monte Carlo simulation
     ├── components/
-    ├── lib/                    # ตรรกะการคำนวณพอร์ต (แยกจาก UI)
-    └── data/                   # JSON ที่ data-pipeline สร้างขึ้น
+    ├── lib/                            # Portfolio maths (kept separate from UI)
+    └── data/                           # JSON produced by the data pipeline
 ```
 
-**จุดเชื่อมระหว่าง 2 ชั้นคือไฟล์ JSON ใน `web/data/`** — pipeline เขียน เว็บแอปอ่าน
-ค่า mean / volatility / correlation ที่ใช้ใน Monte Carlo simulation จึงเป็นตัวเลขจากข้อมูลจริงทั้งหมด
+**The two layers meet at the JSON files in `web/data/`** — the pipeline writes them, the web app
+reads them. Every mean, volatility and correlation used in the Monte Carlo simulation therefore
+comes from real data.
 
 ---
 
-## เริ่มใช้งาน
+## Getting started
 
-### 1. รัน data pipeline (ครั้งแรก หรือเมื่อต้องการอัปเดตข้อมูล)
+### 1. Run the data pipeline (first time, or to refresh the data)
 
 ```bash
 cd data-pipeline
@@ -39,121 +41,134 @@ python3 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-python fetch_data.py               # ดึงข้อมูลดิบ
-python compute_stats.py            # เขียน JSON ให้เว็บแอป
+python fetch_data.py               # Fetch raw data
+python compute_stats.py            # Write JSON for the web app
 ```
 
-ไฟล์ JSON ถูก commit ไว้ในโปรเจกต์แล้ว ถ้าไม่ต้องการอัปเดตข้อมูลสามารถข้ามขั้นนี้ไปได้เลย
+The JSON files are committed to the repository, so you can skip this step unless you want
+fresher data.
 
-รายละเอียดแหล่งข้อมูล ข้อจำกัด และสูตรคำนวณอยู่ใน [`data-pipeline/README.md`](data-pipeline/README.md)
+Source details, limitations and formulas are in [`data-pipeline/README.md`](data-pipeline/README.md).
 
-### 2. รันเว็บแอป
+### 2. Run the web app
 
 ```bash
 cd web
 npm install
-npm run dev                        # เปิด http://localhost:3000
+npm run dev                        # http://localhost:3000
 ```
 
-คำสั่งอื่น:
+Other commands:
 
 ```bash
-npm run build      # build สำหรับ production (ทุกหน้าเป็น static)
-npm start          # รัน production build
-npm run typecheck  # ตรวจ TypeScript
+npm run build      # Production build (every page is static)
+npm start          # Serve the production build
+npm run typecheck  # TypeScript check
 ```
 
 ---
 
-## ข้อมูลที่ใช้
+## Data
 
-| สินทรัพย์ | แหล่งข้อมูล | สถานะ |
+| Asset | Source | Status |
 | --- | --- | --- |
-| ทองคำ | `GC=F` × `USDTHB=X` — Yahoo Finance | ข้อมูลจริง (futures ใกล้เคียง spot) |
-| หุ้นไทย | `TDEX.BK` — ThaiDEX SET50 ETF, Yahoo Finance | **proxy** ของดัชนี SET |
-| ตราสารหนี้ | `DGS10` — US 10Y Treasury, FRED | **proxy** ของพันธบัตรไทย |
+| Gold (THB) | `GC=F` × `USDTHB=X` — Yahoo Finance | Real data (global spot-equivalent price) |
+| Thai equity | `TDEX.BK` — ThaiDEX SET50 ETF, Yahoo Finance | **Proxy** for the SET index |
+| Bonds | `DGS10` — US 10Y Treasury, FRED | **Proxy** for Thai government bonds |
 
-ช่วงข้อมูล: ตั้งแต่ ม.ค. 2551 (2008) ถึงปัจจุบัน — ประมาณ 18.6 ปี / 223 เดือน
-โดยจุดเริ่มต้นถูกกำหนดด้วยอายุข้อมูลของ ETF หุ้นไทยที่สั้นที่สุด
+Coverage: January 2008 to the present — about 18.5 years / 222 months. The start date is set by
+the shortest series, the Thai equity ETF.
 
-### ทำไมต้องใช้ proxy
+Statistics are computed from **monthly** data (222 observations); the chart uses a **weekly**
+series (971 points) so that the short ranges have enough resolution.
 
-- **หุ้นไทย** — ticker ดัชนี SET บน Yahoo Finance (`^SET.BK`, `^SETI`, `^SET50`)
-  ไม่มีข้อมูล time series ย้อนหลังให้ดึง (ตรวจสอบแล้ว) จึงใช้ ETF ที่จดทะเบียนในตลาดหลักทรัพย์ไทย
-  และอ้างอิงดัชนี SET50 แทน ซึ่งเป็นสกุลเงินบาทและปรับเงินปันผลแล้ว
-- **ตราสารหนี้** — ไม่มี API ฟรีสำหรับอัตราผลตอบแทนพันธบัตรรัฐบาลไทย
-  (ThaiBMA / Bank of Thailand ต้องลงทะเบียน) จึงใช้พันธบัตรสหรัฐฯ อายุ 10 ปี
-- **ทองคำ** — ไม่มีแหล่งราคา spot (XAU/USD) ที่ดึงอัตโนมัติได้ฟรี: Yahoo ไม่มี ticker `XAUUSD=X`,
-  stooq ใช้ JS proof-of-work, และ FRED ถอด series ราคา LBMA gold fixing ออกไปแล้ว (404)
-  จึงใช้สัญญาล่วงหน้า COMEX เดือนใกล้ (`GC=F`) ซึ่งเป็นตัวแทน spot ที่ใกล้ที่สุดที่ดึงได้
-  โดยทั่วไปต่างจาก spot ไม่ถึง 1%
+### Why proxies are used
 
-ทั้งสองกรณีมีการติดป้าย `PROXY` แสดงในหน้า **ข้อมูลย้อนหลัง** และระบุใน disclaimer ทุกหน้า
-หากภายหลังมีแหล่งข้อมูลไทย สามารถเปลี่ยนได้โดยแก้เฉพาะไฟล์ CSV ใน `raw/`
-แล้วรัน `compute_stats.py` ใหม่ (ดูวิธีใน README ของ pipeline)
+- **Thai equity** — the SET index tickers on Yahoo Finance (`^SET.BK`, `^SETI`, `^SET50`) return
+  no usable history: `^SET.BK` gives only a single current quote and the others are empty. The
+  substitute is a Bangkok-listed ETF tracking the SET50, which is denominated in THB and
+  dividend-adjusted. SET50 covers the 50 largest listed companies, so it tracks the SET closely
+  but excludes mid- and small-caps.
+- **Bonds** — there is no free API for Thai government bond yields (ThaiBMA and the Bank of
+  Thailand both require registration or an API key), so the US 10-year is used instead.
+- **Gold** — no free, scriptable source for true spot (XAU/USD) exists: Yahoo has no
+  `XAUUSD=X` ticker, stooq is behind a JavaScript proof-of-work challenge, and FRED has removed
+  its LBMA gold fixing series (404). Front-month COMEX futures (`GC=F`) is the closest
+  obtainable stand-in and typically differs from spot by less than 1%.
+
+Both proxies are tagged `PROXY` on the **Historical data** page and stated in the disclaimer on
+every page. To switch to a real Thai source later, replace the relevant CSV in `raw/` and re-run
+`compute_stats.py` — no code changes needed (see the pipeline README).
 
 ---
 
-## รายละเอียดของแต่ละหน้า
+## Pages
 
 ### Home (`/`)
-ภาพรวมเคสศึกษา ผลตอบแทนจริงย้อนหลังของทั้ง 3 สินทรัพย์ และลิงก์ไปอีก 2 หน้า
+Case study overview and a table comparing compound annual growth rate (CAGR) across trailing
+1-year, 5-year, 10-year and full-period windows, with the CAGR formula shown above it. The
+comparison makes the central point visible: gold returned about 25% over the past year but
+about 8.7% annualised over the full period, and bonds are negative over both the 5- and 10-year
+windows.
 
-### ข้อมูลย้อนหลัง (`/reference`)
-- กราฟเส้นเปรียบเทียบทั้ง 3 สินทรัพย์ ปรับฐานเป็น index 100 (ข้อมูลรายสัปดาห์)
-  พร้อมตัวเลือกช่วงเวลา 6 เดือน / 1 ปี / 5 ปี / 10 ปี / ทั้งหมด
-  (เปลี่ยนช่วงแล้วจะ normalize ใหม่ให้จุดเริ่มต้นเป็น 100 เพื่อเทียบทิศทางในช่วงนั้นได้ตรง)
-- การ์ดราคาล่าสุด: ราคาทองคำเป็น USD/ทรอยออนซ์ (ตัวเลข spot) พร้อมค่าเทียบเป็นเงินบาท
-- ตารางสถิติ: CAGR, ผลตอบแทนคาดหวัง, ความผันผวน, Sharpe, ขาดทุนสูงสุด, ปีที่ดี/แย่ที่สุด
-- Correlation matrix แบบไล่เฉดสีตามค่า
-- การ์ดแหล่งข้อมูลรายสินทรัพย์ พร้อม ticker, ผู้ให้บริการ, ช่วงข้อมูลดิบ, วิธีคำนวณ และป้าย `PROXY`
-  — **กดที่การ์ดเพื่อเข้าหน้ารายละเอียดของสินทรัพย์นั้น**
+### Historical data (`/reference`)
+- Line chart comparing all three assets rebased to index 100, with 6-month / 1-year / 5-year /
+  10-year / all range options. Changing the range rebases to 100 at the start of that range, so
+  you compare direction within the window rather than just zooming.
+- Statistics table: CAGR, expected return, volatility, Sharpe, max drawdown, best and worst years.
+- Correlation matrix shaded by value.
+- Source cards per asset with ticker, provider, raw data range, methodology and a `PROXY` tag —
+  **click a card to open that asset's detail page**.
 
-### รายละเอียดรายสินทรัพย์ (`/reference/gold`, `/reference/equity`, `/reference/bond`)
-- สรุปสถิติ: CAGR, ความผันผวน, Sharpe, ขาดทุนสูงสุด
-- ตารางผลตอบแทนตามช่วงเวลา (1 / 5 / 10 ปี / ทั้งหมด) พร้อมผลตอบแทนสะสมและ drawdown ของช่วงนั้น
-- ตารางผลตอบแทนรายปีปฏิทินพร้อมแท่งเปรียบเทียบบวก/ลบ
-- ตารางข้อมูลรายเดือนครบทุกแถว มีช่องกรองตามปี (รองรับทั้ง พ.ศ. และ ค.ศ.)
-  คอลัมน์ราคาปรับตามชนิดสินทรัพย์ — ทองคำแสดงทั้งบาทและ USD ต่อออนซ์,
-  หุ้นแสดงราคาปิด ETF, ตราสารหนี้แสดง yield
-- แถวของเดือนที่ยังไม่จบมีป้ายกำกับ เพราะค่า "เปลี่ยนแปลง" ไม่ใช่ผลตอบแทนเต็มเดือน
+### Per-asset detail (`/reference/gold`, `/reference/equity`, `/reference/bond`)
+- Summary statistics: CAGR, volatility, Sharpe, max drawdown.
+- Returns by period (1 / 5 / 10 years / all) including cumulative return and the drawdown within
+  each window.
+- Calendar-year returns with diverging bars.
+- A full 224-row monthly data table with a year filter that accepts both Buddhist and Gregorian
+  years. Price columns adapt per asset: gold shows both THB and USD per ounce, equity shows the
+  ETF close, bonds show the yield.
+- Rows for a month still in progress are labelled, because their "change" is not a full-month
+  return.
 
-### จำลองพอร์ต (`/simulation`)
-- Persona selector 4 แบบ (ใกล้เกษียณ / วัยทำงานกลาง / วัยเริ่มทำงาน / เน้นป้องกันความเสี่ยง)
-- Slider: อายุ, ระยะเวลาลงทุน, สัดส่วนทองคำ + ปุ่มเลือกระดับความเสี่ยง + ช่องกรอกเงินลงทุน
-- แถบสัดส่วนการลงทุนแบบ stacked + stat cards 4 ใบ
-- Monte Carlo fan chart 1,200 รอบ (percentile band 5–95% และ 25–75%)
-- Histogram ของมูลค่าพอร์ตปลายทาง
-- Efficient frontier พร้อมจุดแสดงพอร์ตปัจจุบัน
-- ตารางเปรียบเทียบทั้ง 4 persona
-- Badge ระบุชัดเจนว่าคำนวณจากข้อมูลย้อนหลังจริงช่วงใด
-
----
-
-## หมายเหตุทางเทคนิค
-
-**Monte Carlo ใช้ตัวเลขสุ่มแบบกำหนด seed** (`mulberry32`) แทน `Math.random()`
-ทำให้ผลลัพธ์เหมือนเดิมทุกครั้งที่ render — จำเป็นสำหรับการนำเสนอที่ต้องอ้างตัวเลขซ้ำได้
-และป้องกัน hydration mismatch ระหว่าง server กับ client
-
-**ผลตอบแทนที่มีสหสัมพันธ์กัน** สร้างด้วย Cholesky decomposition ของ covariance matrix
-ที่ประกอบขึ้นจาก volatility และ correlation ของข้อมูลจริง
-
-**ตรรกะการคำนวณแยกจาก UI** ทั้งหมดอยู่ใน [`web/lib/portfolio.ts`](web/lib/portfolio.ts)
-เป็นฟังก์ชันบริสุทธิ์ที่ไม่พึ่ง React
-
-**ทุกหน้าเป็น static** — JSON ถูก import ตอน build ไม่มีการเรียก API ตอน runtime
-deploy ขึ้น static host ได้ทันที
+### Simulation (`/simulation`)
+- Four persona presets (near retirement / mid-career / early career / risk-averse).
+- Sliders for investment horizon and gold weight, buttons for risk tolerance, and a capital input.
+- Stacked allocation bar and four stat cards.
+- Monte Carlo fan chart over 1,200 runs (5–95% and 25–75% percentile bands).
+- Histogram of ending portfolio values.
+- Efficient frontier with the current portfolio marked.
+- Comparison table across all four personas.
+- A badge stating exactly which historical window the figures come from.
 
 ---
 
-## ข้อจำกัดของแบบจำลอง
+## Technical notes
 
-- สมมติว่าผลตอบแทนรายปีมีการแจกแจงแบบปกติและค่าสถิติคงที่ตลอดช่วงเวลา
-  ในความเป็นจริงตลาดมีช่วงวิกฤตที่ผลตอบแทนติดลบรุนแรงกว่า และสหสัมพันธ์ระหว่างสินทรัพย์เปลี่ยนไป
-- ช่วงข้อมูล 2008–ปัจจุบัน เป็นช่วงที่ทองคำให้ผลตอบแทนสูงเป็นพิเศษ ผลในอนาคตอาจต่างไปมาก
-- ไม่ได้รวมค่าธรรมเนียม ภาษี การ rebalance และเงินลงทุนเพิ่มระหว่างทาง
-- ราคาทองคำเป็นราคาตลาดโลกแปลงเป็นบาท ไม่ใช่ราคาทองคำแท่ง 96.5% ในประเทศ
+**The Monte Carlo uses a seeded PRNG** (`mulberry32`) rather than `Math.random()`, so results are
+identical on every render. That matters for presenting: figures can be quoted and reproduced, and
+it avoids server/client hydration mismatches.
 
-> **เคสศึกษานี้จัดทำเพื่อการศึกษาเท่านั้น ไม่ใช่คำแนะนำการลงทุน**
-> ผลตอบแทนในอดีตไม่ได้รับประกันผลตอบแทนในอนาคต
+**Correlated returns** are generated via Cholesky decomposition of the covariance matrix built
+from the real volatilities and correlations.
+
+**Portfolio maths is separate from the UI** — all of it lives in
+[`web/lib/portfolio.ts`](web/lib/portfolio.ts) as pure functions with no React dependency.
+
+**Every page is static.** The JSON is imported at build time; there are no runtime API calls, so
+the app deploys to any static host.
+
+---
+
+## Model limitations
+
+- The model assumes annual returns are normally distributed with constant statistics. Real markets
+  have crisis periods with far worse tails, and correlations that shift exactly when
+  diversification is needed most.
+- The 2008–present window was an unusually strong period for gold, so the simulation is
+  structurally favourable to it. Future results may differ substantially.
+- Fees, taxes, rebalancing and additional contributions are not modelled.
+- Gold is the global price converted to THB, not the domestic 96.5% bullion price.
+
+> This is an educational case study, not investment advice.
+> Past performance does not guarantee future results.
