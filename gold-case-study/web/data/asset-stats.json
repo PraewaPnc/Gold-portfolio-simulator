@@ -1,0 +1,334 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-12T02:06:51+00:00",
+    "fetchedAt": "2026-08-11T17:26:33+00:00",
+    "dataRange": {
+      "start": "2008-01-31",
+      "end": "2026-07-31",
+      "months": 222,
+      "years": 18.5,
+      "frequency": "monthly (month-end)",
+      "seriesEnd": "2026-08-07",
+      "seriesStart": "2008-01-04",
+      "seriesFrequency": "weekly (Friday close)",
+      "seriesPoints": 971,
+      "excludedPartialFinalMonth": true
+    },
+    "riskFreeRate": 0.015,
+    "riskFreeRateNote": "สมมติฐานอัตราผลตอบแทนปราศจากความเสี่ยงที่ 1.5% ต่อปี อ้างอิงระดับอัตราดอกเบี้ยนโยบายของไทยโดยประมาณ (ไม่ได้ดึงจาก API)",
+    "returnConvention": "annualReturn เป็น arithmetic mean ของผลตอบแทนรายเดือน x 12 ใช้เป็น input ของ Monte Carlo simulation | cagr เป็นผลตอบแทนทบต้นที่เกิดขึ้นจริงในช่วงข้อมูล"
+  },
+  "assets": {
+    "gold": {
+      "key": "gold",
+      "label": "ทองคำ",
+      "labelEn": "Gold (THB)",
+      "annualReturn": 0.095877,
+      "annualVolatility": 0.153922,
+      "cagr": 0.087496,
+      "totalReturn": 3.7197,
+      "sharpe": 0.5254,
+      "maxDrawdown": -0.3057,
+      "bestYear": {
+        "year": "2025",
+        "return": 0.515628
+      },
+      "worstYear": {
+        "year": "2013",
+        "return": -0.212394
+      },
+      "calendarYearReturns": {
+        "2009": 0.19582,
+        "2010": 0.177099,
+        "2011": 0.170878,
+        "2012": 0.007507,
+        "2013": -0.212394,
+        "2014": -0.013685,
+        "2015": -0.01881,
+        "2016": 0.081043,
+        "2017": 0.03422,
+        "2018": -0.025688,
+        "2019": 0.095344,
+        "2020": 0.24375,
+        "2021": 0.075244,
+        "2022": 0.033231,
+        "2023": 0.123869,
+        "2024": 0.269212,
+        "2025": 0.515628,
+        "2026": -0.006775
+      }
+    },
+    "equity": {
+      "key": "equity",
+      "label": "หุ้นไทย",
+      "labelEn": "Thai Equity",
+      "annualReturn": 0.082697,
+      "annualVolatility": 0.192091,
+      "cagr": 0.065733,
+      "totalReturn": 2.247107,
+      "sharpe": 0.3524,
+      "maxDrawdown": -0.534418,
+      "bestYear": {
+        "year": "2009",
+        "return": 0.596935
+      },
+      "worstYear": {
+        "year": "2015",
+        "return": -0.168852
+      },
+      "calendarYearReturns": {
+        "2009": 0.596935,
+        "2010": 0.3762,
+        "2011": 0.012552,
+        "2012": 0.322314,
+        "2013": -0.044888,
+        "2014": 0.166461,
+        "2015": -0.168852,
+        "2016": 0.236876,
+        "2017": 0.187102,
+        "2018": -0.04566,
+        "2019": 0.061913,
+        "2020": -0.109845,
+        "2021": 0.134202,
+        "2022": 0.090249,
+        "2023": -0.083659,
+        "2024": 0.090903,
+        "2025": -0.041548,
+        "2026": 0.332147
+      }
+    },
+    "bond": {
+      "key": "bond",
+      "label": "ตราสารหนี้",
+      "labelEn": "Government Bond",
+      "annualReturn": 0.024291,
+      "annualVolatility": 0.075361,
+      "cagr": 0.021695,
+      "totalReturn": 0.487451,
+      "sharpe": 0.1233,
+      "maxDrawdown": -0.261122,
+      "bestYear": {
+        "year": "2011",
+        "return": 0.161699
+      },
+      "worstYear": {
+        "year": "2022",
+        "return": -0.163638
+      },
+      "calendarYearReturns": {
+        "2009": -0.100724,
+        "2010": 0.078945,
+        "2011": 0.161699,
+        "2012": 0.027313,
+        "2013": -0.085061,
+        "2014": 0.105904,
+        "2015": 0.011312,
+        "2016": 0.00118,
+        "2017": 0.027897,
+        "2018": 0.002764,
+        "2019": 0.092367,
+        "2020": 0.104605,
+        "2021": -0.040895,
+        "2022": -0.163638,
+        "2023": 0.038488,
+        "2024": -0.015171,
+        "2025": 0.076891,
+        "2026": -0.020229
+      }
+    }
+  },
+  "trailingReturns": [
+    {
+      "key": "1y",
+      "label": "1 ปี",
+      "months": 12,
+      "years": 1.0,
+      "start": "2025-07-31",
+      "end": "2026-07-31",
+      "assets": {
+        "gold": {
+          "cagr": 0.254342,
+          "totalReturn": 0.254342,
+          "annualVolatility": 0.217937,
+          "maxDrawdown": -0.177177
+        },
+        "equity": {
+          "cagr": 0.384028,
+          "totalReturn": 0.384028,
+          "annualVolatility": 0.177174,
+          "maxDrawdown": -0.041667
+        },
+        "bond": {
+          "cagr": 0.012086,
+          "totalReturn": 0.012086,
+          "annualVolatility": 0.049955,
+          "maxDrawdown": -0.043288
+        }
+      }
+    },
+    {
+      "key": "5y",
+      "label": "5 ปี",
+      "months": 60,
+      "years": 5.0,
+      "start": "2021-07-31",
+      "end": "2026-07-31",
+      "assets": {
+        "gold": {
+          "cagr": 0.178154,
+          "totalReturn": 1.269915,
+          "annualVolatility": 0.133542,
+          "maxDrawdown": -0.177177
+        },
+        "equity": {
+          "cagr": 0.085756,
+          "totalReturn": 0.508902,
+          "annualVolatility": 0.153282,
+          "maxDrawdown": -0.208692
+        },
+        "bond": {
+          "cagr": -0.024262,
+          "totalReturn": -0.115565,
+          "annualVolatility": 0.079475,
+          "maxDrawdown": -0.219279
+        }
+      }
+    },
+    {
+      "key": "10y",
+      "label": "10 ปี",
+      "months": 120,
+      "years": 10.0,
+      "start": "2016-07-31",
+      "end": "2026-07-31",
+      "assets": {
+        "gold": {
+          "cagr": 0.111479,
+          "totalReturn": 1.877473,
+          "annualVolatility": 0.12964,
+          "maxDrawdown": -0.177177
+        },
+        "equity": {
+          "cagr": 0.056403,
+          "totalReturn": 0.73099,
+          "annualVolatility": 0.163862,
+          "maxDrawdown": -0.302017
+        },
+        "bond": {
+          "cagr": -0.000845,
+          "totalReturn": -0.008413,
+          "annualVolatility": 0.071856,
+          "maxDrawdown": -0.261122
+        }
+      }
+    },
+    {
+      "key": "all",
+      "label": "ทั้งหมด",
+      "months": 222,
+      "years": 18.5,
+      "start": "2008-01-31",
+      "end": "2026-07-31",
+      "assets": {
+        "gold": {
+          "cagr": 0.087496,
+          "totalReturn": 3.7197,
+          "annualVolatility": 0.153922,
+          "maxDrawdown": -0.3057
+        },
+        "equity": {
+          "cagr": 0.065733,
+          "totalReturn": 2.247107,
+          "annualVolatility": 0.192091,
+          "maxDrawdown": -0.534418
+        },
+        "bond": {
+          "cagr": 0.021695,
+          "totalReturn": 0.487451,
+          "annualVolatility": 0.075361,
+          "maxDrawdown": -0.261122
+        }
+      }
+    }
+  ],
+  "correlation": {
+    "gold": {
+      "gold": 1.0,
+      "equity": 0.0224,
+      "bond": 0.2782
+    },
+    "equity": {
+      "gold": 0.0224,
+      "equity": 1.0,
+      "bond": -0.0625
+    },
+    "bond": {
+      "gold": 0.2782,
+      "equity": -0.0625,
+      "bond": 1.0
+    }
+  },
+  "sources": {
+    "gold": {
+      "label": "ทองคำ",
+      "method": "ราคาทองคำ USD/troy ounce x อัตราแลกเปลี่ยน USDTHB = ราคาในสกุลบาท",
+      "priceSource": {
+        "ticker": "GC=F",
+        "description": "COMEX Gold Futures (continuous front-month), USD/troy ounce",
+        "provider": "Yahoo Finance",
+        "rows": 5430,
+        "start": "2005-01-03",
+        "end": "2026-08-11"
+      },
+      "fxSource": {
+        "ticker": "USDTHB=X",
+        "description": "อัตราแลกเปลี่ยน USD/THB (Yahoo Finance)",
+        "provider": "Yahoo Finance",
+        "rows": 5603,
+        "start": "2005-01-03",
+        "end": "2026-08-11"
+      },
+      "isProxy": false,
+      "notes": "ใช้ราคาตลาดโลกแปลงเป็นเงินบาท ไม่ใช่ราคาทองคำแท่ง 96.5% ของสมาคมค้าทองคำ ซึ่งไม่มี API สาธารณะให้ดึงย้อนหลัง ราคาทองคำแท่งในประเทศจะเคลื่อนไหวใกล้เคียงกันแต่มีส่วนต่างค่าพรีเมียมและความบริสุทธิ์"
+    },
+    "equity": {
+      "label": "หุ้นไทย",
+      "method": "ราคาปิดรายวันของ ETF อ้างอิงดัชนี SET50 ปรับเงินปันผลแล้ว แปลงเป็นรายเดือน",
+      "priceSource": {
+        "ticker": "TDEX.BK",
+        "description": "ThaiDEX SET50 ETF (TDEX) — กองทุน ETF อ้างอิงดัชนี SET50 ซื้อขายในตลาดหลักทรัพย์ไทย สกุลเงินบาท ปรับเงินปันผลแล้ว",
+        "provider": "Yahoo Finance",
+        "currency": "THB",
+        "rows": 4532,
+        "start": "2008-01-02",
+        "end": "2026-08-10"
+      },
+      "isProxy": true,
+      "notes": "ดัชนี SET โดยตรง (^SET.BK) บน Yahoo Finance ไม่มีข้อมูล time series ย้อนหลัง จึงใช้ ETF ที่จดทะเบียนในตลาดหลักทรัพย์ไทยและอ้างอิงดัชนี SET50 เป็นตัวแทน SET50 ครอบคลุมหุ้นขนาดใหญ่ 50 ตัวแรก จึงมีทิศทางใกล้เคียงดัชนี SET แต่ไม่รวมหุ้นขนาดกลาง-เล็ก"
+    },
+    "bond": {
+      "label": "ตราสารหนี้",
+      "method": "แปลงอัตราผลตอบแทนพันธบัตร 10 ปี เป็นดัชนีผลตอบแทนรวมรายเดือน ด้วยสูตร carry + duration + convexity: r = y/12 - D_mod x Δy + 0.5 x C x Δy²",
+      "priceSource": {
+        "ticker": "DGS10",
+        "description": "US 10-Year Treasury Constant Maturity Rate (FRED: DGS10) — ใช้เป็น proxy แทนพันธบัตรรัฐบาลไทยอายุ 10 ปี",
+        "provider": "FRED (Federal Reserve Bank of St. Louis)",
+        "isProxy": true,
+        "proxyNote": "ไม่มี API สาธารณะที่เข้าถึงได้ฟรีสำหรับอัตราผลตอบแทนพันธบัตรรัฐบาลไทยอายุ 10 ปี (ThaiBMA และ Bank of Thailand ต้องลงทะเบียน/ใช้ API key) จึงใช้พันธบัตรรัฐบาลสหรัฐฯ อายุ 10 ปีแทน",
+        "rows": 5404,
+        "start": "2005-01-03",
+        "end": "2026-08-07"
+      },
+      "isProxy": true,
+      "notes": "ไม่มี API สาธารณะที่เข้าถึงได้ฟรีสำหรับอัตราผลตอบแทนพันธบัตรรัฐบาลไทยอายุ 10 ปี (ThaiBMA และ Bank of Thailand ต้องลงทะเบียน/ใช้ API key) จึงใช้พันธบัตรรัฐบาลสหรัฐฯ อายุ 10 ปีแทน"
+    }
+  },
+  "disclaimers": [
+    "เคสศึกษานี้จัดทำเพื่อการศึกษาเท่านั้น ไม่ใช่คำแนะนำการลงทุน",
+    "ผลตอบแทนในอดีตไม่ได้รับประกันผลตอบแทนในอนาคต",
+    "ข้อมูลหุ้นไทยใช้ ETF อ้างอิงดัชนี SET50 เป็นตัวแทนของตลาดหุ้นไทย",
+    "ข้อมูลตราสารหนี้ใช้พันธบัตรรัฐบาลสหรัฐฯ อายุ 10 ปี เป็น proxy เนื่องจากไม่มีแหล่งข้อมูลพันธบัตรไทยที่เข้าถึงได้ฟรี",
+    "ราคาทองคำใช้ราคาตลาดโลกแปลงเป็นเงินบาท ไม่ใช่ราคาทองคำแท่งในประเทศ",
+    "Monte Carlo simulation สมมติว่าผลตอบแทนมีการแจกแจงแบบปกติและคงที่ตลอดช่วงเวลา ซึ่งเป็นข้อสมมติที่ง่ายกว่าความเป็นจริง"
+  ]
+}

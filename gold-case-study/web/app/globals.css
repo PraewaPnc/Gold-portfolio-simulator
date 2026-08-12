@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+  }
+
+  /* ตัวเลขทั้งหมดใช้ความกว้างเท่ากัน เพื่อไม่ให้ตารางกระตุกตอนค่าเปลี่ยน */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    @apply bg-gold text-bg;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-xl border border-line bg-panel;
+  }
+
+  .eyebrow {
+    @apply font-mono text-[11px] uppercase tracking-[0.14em] text-gold;
+  }
+
+  .label-caps {
+    @apply text-[11px] font-medium uppercase tracking-[0.08em] text-ink-faint;
+  }
+
+  /* ---- Slider ---- */
+  .slider {
+    @apply my-1.5 h-[3px] w-full cursor-pointer appearance-none rounded-sm bg-line outline-none;
+  }
+  .slider::-webkit-slider-thumb {
+    @apply h-[15px] w-[15px] appearance-none rounded-full border-2 border-bg bg-gold;
+  }
+  .slider::-moz-range-thumb {
+    @apply h-[15px] w-[15px] rounded-full border-2 border-bg bg-gold;
+    border-style: solid;
+  }
+  .slider:focus-visible {
+    @apply ring-2 ring-gold/60 ring-offset-2 ring-offset-bg;
+  }
+
+  .number-input {
+    @apply w-full rounded-md border border-line bg-panel2 px-2.5 py-2 font-mono text-[13px]
+           text-ink outline-none focus:border-gold/70;
+  }
+
+  /* ---- Segmented buttons / chips ---- */
+  .chip {
+    @apply cursor-pointer rounded-full border border-line bg-transparent px-[11px] py-[7px]
+           text-xs text-ink-dim transition-colors hover:border-gold hover:text-ink;
+  }
+  .chip[data-active="true"] {
+    @apply border-gold bg-gold font-medium text-bg hover:text-bg;
+  }
+
+  .seg-btn {
+    @apply flex-1 cursor-pointer rounded-[7px] border border-line bg-transparent px-1 py-2
+           text-center text-[11.5px] text-ink-dim transition-colors hover:border-gold/60;
+  }
+  .seg-btn[data-active="true"] {
+    @apply border-gold bg-panel2 text-gold-light;
+  }
+
+  /* ---- Tables ---- */
+  .data-table {
+    @apply w-full border-collapse text-[12.5px];
+  }
+  .data-table th {
+    @apply border-b border-line px-2.5 py-2 text-left text-[10.5px] font-medium uppercase
+           tracking-[0.05em] text-ink-faint;
+  }
+  .data-table td {
+    @apply border-b border-line px-2.5 py-2.5 text-ink-dim;
+  }
+  .data-table td.strong {
+    @apply font-mono text-ink tabular;
+  }
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+}

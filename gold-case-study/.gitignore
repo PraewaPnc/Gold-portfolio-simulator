@@ -1,0 +1,19 @@
+# Python
+data-pipeline/.venv/
+__pycache__/
+*.pyc
+
+# ข้อมูลดิบสร้างใหม่ได้ด้วย fetch_data.py จึงไม่ต้อง commit
+# (ส่วนไฟล์ JSON ใน web/data/ commit ไว้ เพื่อให้ build เว็บได้โดยไม่ต้องรัน pipeline)
+data-pipeline/raw/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Misc
+.DS_Store
+.env*.local
