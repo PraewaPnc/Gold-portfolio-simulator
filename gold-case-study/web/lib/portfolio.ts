@@ -1,6 +1,14 @@
 import { ASSETS, type AssetKey, type AssetStats } from "./types";
 
-export type Weights = Record<AssetKey, number>;
+/**
+ * น้ำหนักของเงินทุนทั้งก้อน — รวมกันได้ 1 เสมอ
+ * cash คือ "สำรองเงินสด" ที่กันออกก่อน ไม่ใช่สินทรัพย์ลงทุน จึงไม่อยู่ใน ASSETS
+ * (ไม่มีสถิติผลตอบแทน/ความผันผวน/สหสัมพันธ์ใน asset-stats.json)
+ */
+export type Weights = Record<AssetKey, number> & { cash: number };
+
+/** เพดานสำรองเงินสด — กันไม่ให้เหลือเงินลงทุนน้อยจนแบบจำลองไม่มีความหมาย */
+export const MAX_CASH = 0.3;
 
 export interface MarketModel {
   /** ผลตอบแทนคาดหวังรายปี (arithmetic) ของแต่ละสินทรัพย์ */
@@ -79,10 +87,17 @@ export interface PortfolioStats {
   sharpe: number;
 }
 
-/** ผลตอบแทนคาดหวัง ความผันผวน และ Sharpe ratio ของพอร์ตตามน้ำหนักที่กำหนด */
+/**
+ * ผลตอบแทนคาดหวัง ความผันผวน และ Sharpe ratio ของเงินทุนทั้งก้อนตามน้ำหนักที่กำหนด
+ *
+ * สำรองเงินสดเข้าสูตรในฐานะสินทรัพย์ที่ให้ผลตอบแทนเท่าอัตราปราศจากความเสี่ยง
+ * และมีความผันผวนเป็นศูนย์ จึงไม่มีพจน์ความแปรปรวนร่วมกับสินทรัพย์อื่น
+ * ผลที่ตามมาคือเงินสดลดทั้งผลตอบแทนคาดหวังและความผันผวนตามสัดส่วนเดียวกัน
+ * Sharpe ratio จึงไม่เปลี่ยน (เป็นพฤติกรรมของ capital allocation line ตามทฤษฎี)
+ */
 export function portfolioStats(w: Weights, model: MarketModel): PortfolioStats {
   const wArr = ASSETS.map((a) => w[a]);
-  let ret = 0;
+  let ret = w.cash * model.riskFree;
   ASSETS.forEach((a, i) => {
     ret += wArr[i] * model.mu[a];
   });
@@ -113,6 +128,45 @@ export const PROFILES: Record<string, RiskProfile> = {
 
 export type ProfileKey = keyof typeof PROFILES;
 
+/**
+ * หมุดของแต่ละโปรไฟล์บนแกน "สัดส่วนทองคำ" เรียงจากทองน้อยไปมาก
+ * ทองยิ่งมาก = ยิ่งอนุรักษ์นิยม จึงได้ลำดับ เชิงรุก → ปานกลาง → อนุรักษ์นิยม
+ */
+export const GOLD_ANCHORS: { key: ProfileKey; label: string; gold: number; equityShare: number }[] =
+  (["aggressive", "moderate", "conservative"] as ProfileKey[]).map((key) => {
+    const p = PROFILES[key];
+    const denom = p.equity + p.bond;
+    return { key, label: p.label, gold: p.gold, equityShare: denom > 0 ? p.equity / denom : 0.5 };
+  });
+
+export interface RiskBand {
+  key: ProfileKey;
+  label: string;
+  /** สัดส่วนทองคำที่เป็นหมุดของระดับนี้ */
+  gold: number;
+  /** ขอบล่างของช่วงสัดส่วนทองคำ (0 สำหรับระดับเสี่ยงสูงสุด) */
+  lo: number;
+  /** ขอบบนของช่วงสัดส่วนทองคำ (Infinity สำหรับระดับเสี่ยงต่ำสุด) */
+  hi: number;
+}
+
+/**
+ * ช่วงสัดส่วนทองคำของแต่ละระดับความเสี่ยง
+ * เส้นแบ่งคือจุดกึ่งกลางระหว่างหมุดที่ติดกัน จึงรับประกันว่าหมุดของแต่ละระดับตกในช่วงของตัวเองเสมอ
+ */
+export const RISK_BANDS: RiskBand[] = GOLD_ANCHORS.map((a, i) => ({
+  key: a.key,
+  label: a.label,
+  gold: a.gold,
+  lo: i === 0 ? 0 : (GOLD_ANCHORS[i - 1].gold + a.gold) / 2,
+  hi: i === GOLD_ANCHORS.length - 1 ? Infinity : (a.gold + GOLD_ANCHORS[i + 1].gold) / 2,
+}));
+
+/** หาว่าสัดส่วนทองคำที่ให้มาตกอยู่ในระดับความเสี่ยงใด — ใช้ตัดสินว่าปุ่มไหนควรไฮไลต์ */
+export function riskBandForGold(goldW: number): RiskBand {
+  return RISK_BANDS.find((b) => goldW < b.hi) ?? RISK_BANDS[RISK_BANDS.length - 1];
+}
+
 export interface Persona {
   id: string;
   label: string;
@@ -121,8 +175,13 @@ export interface Persona {
   /** ช่วงอายุโดยประมาณของ persona นี้ */
   ageRange: string;
   horizon: number;
-  risk: string;
+  /** สัดส่วนทองคำในส่วนที่ลงทุน — ตัวแปรเดียวที่กำหนดพอร์ตลงทุน ระดับความเสี่ยงอนุมานจากค่านี้ */
   gold: number;
+  /**
+   * สำรองเงินสดเป็นสัดส่วนของเงินทุนทั้งก้อน
+   * ยิ่งเหลือเวลาลงทุนสั้นยิ่งกันมาก เพราะไม่มีเวลารอให้พอร์ตฟื้นถ้าต้องใช้เงินกะทันหัน
+   */
+  cash: number;
   blurb: string;
 }
 
@@ -133,8 +192,8 @@ export const PERSONAS: Persona[] = [
     age: 57,
     ageRange: "55–60 ปี",
     horizon: 4,
-    risk: "conservative",
     gold: 0.2,
+    cash: 0.15,
     blurb: "เหลือเวลาลงทุนสั้น ต้องการรักษาเงินต้นเป็นหลัก",
   },
   {
@@ -143,8 +202,8 @@ export const PERSONAS: Persona[] = [
     age: 40,
     ageRange: "38–45 ปี",
     horizon: 12,
-    risk: "moderate",
     gold: 0.15,
+    cash: 0.1,
     blurb: "สมดุลระหว่างการเติบโตและการป้องกันความเสี่ยง",
   },
   {
@@ -153,8 +212,8 @@ export const PERSONAS: Persona[] = [
     age: 27,
     ageRange: "25–32 ปี",
     horizon: 25,
-    risk: "aggressive",
     gold: 0.08,
+    cash: 0.05,
     blurb: "ระยะเวลายาว รับความผันผวนได้สูง เน้นการเติบโต",
   },
   {
@@ -163,29 +222,50 @@ export const PERSONAS: Persona[] = [
     age: 45,
     ageRange: "40–50 ปี",
     horizon: 10,
-    risk: "conservative",
     gold: 0.28,
+    cash: 0.1,
     blurb: "กังวลเงินเฟ้อและวิกฤต จึงถือทองคำในสัดส่วนสูง",
   },
 ];
 
-/** สัดส่วนหุ้นในส่วนที่ไม่ใช่ทองคำ ตามโปรไฟล์ความเสี่ยง (ใช้แสดงผลให้เห็นว่าโปรไฟล์มีผลอย่างไร) */
-export function equityShareOfRest(profileKey: string): number {
-  const base = PROFILES[profileKey] ?? PROFILES.moderate;
-  const denom = base.equity + base.bond;
-  return denom > 0 ? base.equity / denom : 0.5;
+/**
+ * สัดส่วนหุ้นในส่วนที่ไม่ใช่ทองคำ เป็นฟังก์ชันต่อเนื่องของสัดส่วนทองคำ
+ * ลากเส้นตรงเชื่อมหมุดของทั้งสามโปรไฟล์ และคงค่าคงที่นอกช่วงหมุด
+ *
+ * ที่ต้องต่อเนื่องเพราะสัดส่วนทองคำเป็น "แกนเดียว" ที่ควบคุมพอร์ตทั้งใบ
+ * ถ้าให้กระโดดเป็นขั้นตอนข้ามเส้นแบ่งระดับความเสี่ยง สัดส่วนและตัวเลขสถิติจะกระตุกตอนลากสไลเดอร์
+ */
+export function equityShareForGold(goldW: number): number {
+  const first = GOLD_ANCHORS[0];
+  const last = GOLD_ANCHORS[GOLD_ANCHORS.length - 1];
+  if (goldW <= first.gold) return first.equityShare;
+  if (goldW >= last.gold) return last.equityShare;
+
+  for (let i = 0; i < GOLD_ANCHORS.length - 1; i++) {
+    const a = GOLD_ANCHORS[i];
+    const b = GOLD_ANCHORS[i + 1];
+    if (goldW <= b.gold) {
+      const t = (goldW - a.gold) / (b.gold - a.gold);
+      return a.equityShare + (b.equityShare - a.equityShare) * t;
+    }
+  }
+  return last.equityShare;
 }
 
 /**
- * เมื่อผู้ใช้กำหนดสัดส่วนทองคำเอง ส่วนที่เหลือจะถูกแบ่งระหว่างหุ้นกับตราสารหนี้
- * ตามอัตราส่วนเดิมของโปรไฟล์ความเสี่ยงที่เลือก
+ * น้ำหนักของเงินทุนทั้งก้อนจากสัดส่วนทองคำและสำรองเงินสด
+ *
+ * ลำดับการคิดตรงกับลำดับการตัดสินใจจริง — กันสำรองเงินสดออกก่อน
+ * แล้วค่อยจัดสรร "ส่วนที่ลงทุน" ที่เหลือตามสัดส่วนทองคำ
+ * goldW จึงเป็นสัดส่วนของส่วนที่ลงทุน ไม่ใช่ของเงินทุนทั้งก้อน
+ * (ระดับความเสี่ยงเป็นคุณสมบัติของพอร์ตลงทุน จึงไม่ควรเปลี่ยนเพราะกันเงินสดมากขึ้น)
  */
-export function weightsFromGold(goldW: number, profileKey: string): Weights {
-  const base = PROFILES[profileKey] ?? PROFILES.moderate;
-  const denom = base.equity + base.bond;
-  const ratio = denom > 0 ? base.equity / denom : 0.5;
-  const rest = 1 - goldW;
-  return { gold: goldW, equity: rest * ratio, bond: rest * (1 - ratio) };
+export function weightsFromGold(goldW: number, cashW = 0): Weights {
+  const cash = Math.min(Math.max(cashW, 0), MAX_CASH);
+  const invested = 1 - cash;
+  const ratio = equityShareForGold(goldW);
+  const rest = invested * (1 - goldW);
+  return { gold: invested * goldW, equity: rest * ratio, bond: rest * (1 - ratio), cash };
 }
 
 export interface FanPoint {
@@ -216,9 +296,13 @@ function percentile(sorted: number[], p: number): number {
 }
 
 /**
- * Monte Carlo simulation ของมูลค่าพอร์ตรายปี
+ * Monte Carlo simulation ของมูลค่าเงินทุนทั้งก้อนรายปี
  * ผลตอบแทนรายปีของแต่ละสินทรัพย์สุ่มจากการแจกแจงปกติหลายตัวแปร
  * โดยใช้ mean / volatility / correlation ที่ประมาณจากข้อมูลย้อนหลังจริง
+ *
+ * สำรองเงินสดถูกแยกออกมาเป็นอีกก้อนที่โตด้วยอัตราปราศจากความเสี่ยงแบบแน่นอน
+ * และไม่ถูกโยกกลับเข้าตลาดเลย — ตรงกับความหมายของ "เงินสำรอง" ที่กันไว้ใช้ยามฉุกเฉิน
+ * ไม่ใช่สินทรัพย์ที่ปรับสัดส่วนไปมากับพอร์ตลงทุน
  */
 export function runMonteCarlo(
   w: Weights,
@@ -228,17 +312,22 @@ export function runMonteCarlo(
   nSims = 1200,
   seed = 20240101,
 ): SimulationResult {
-  const wArr = ASSETS.map((a) => w[a]);
+  const investedShare = Math.max(1 - w.cash, 0);
+  // น้ำหนักภายใน "ส่วนที่ลงทุน" — หารกลับให้รวมกันเป็น 1 เพราะก้อนเงินสดถูกแยกออกไปแล้ว
+  const wArr = ASSETS.map((a) => (investedShare > 0 ? w[a] / investedShare : 0));
   const muArr = ASSETS.map((a) => model.mu[a]);
   const l = model.chol;
   const h = Math.max(1, Math.round(horizon));
+
+  const cashCapital = capital * w.cash;
+  const investedCapital = capital * investedShare;
 
   const randn = makeNormal(mulberry32(seed));
   const valuesByYear: number[][] = Array.from({ length: h + 1 }, () => new Array<number>(nSims));
   for (let s = 0; s < nSims; s++) valuesByYear[0][s] = capital;
 
   for (let s = 0; s < nSims; s++) {
-    let value = capital;
+    let invested = investedCapital;
     for (let y = 1; y <= h; y++) {
       const z = [randn(), randn(), randn()];
       let r = 0;
@@ -248,8 +337,8 @@ export function runMonteCarlo(
         r += wArr[i] * assetReturn;
       }
       // พอร์ตเสียมูลค่าได้ไม่เกิน 95% ในหนึ่งปี กันค่าติดลบจาก tail ของการแจกแจงปกติ
-      value *= 1 + Math.max(r, -0.95);
-      valuesByYear[y][s] = value;
+      invested *= 1 + Math.max(r, -0.95);
+      valuesByYear[y][s] = invested + cashCapital * (1 + model.riskFree) ** y;
     }
   }
 
@@ -298,20 +387,4 @@ export function histogram(values: number[], binsCount = 22): HistogramBin[] {
     bins[idx].count++;
   }
   return bins;
-}
-
-export interface FrontierPoint {
-  vol: number;
-  ret: number;
-  gold: number;
-}
-
-/** กวาดสัดส่วนทองคำตั้งแต่ 0% ถึง 40% เพื่อวาดเส้น efficient frontier */
-export function buildFrontier(profileKey: string, model: MarketModel): FrontierPoint[] {
-  const points: FrontierPoint[] = [];
-  for (let g = 0; g <= 0.4001; g += 0.02) {
-    const s = portfolioStats(weightsFromGold(g, profileKey), model);
-    points.push({ vol: s.vol * 100, ret: s.ret * 100, gold: g });
-  }
-  return points;
 }

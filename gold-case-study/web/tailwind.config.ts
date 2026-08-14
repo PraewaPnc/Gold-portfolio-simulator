@@ -23,6 +23,7 @@ const config: Config = {
         },
         equity: "#5B87A6",
         bond: "#4F8B76",
+        cash: "#8E8778",
         danger: "#B25A4A",
         ink: {
           DEFAULT: "#EDE6D8",
