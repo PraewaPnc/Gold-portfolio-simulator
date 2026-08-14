@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/", label: "ภาพรวม" },
   { href: "/reference", label: "ข้อมูลย้อนหลัง" },
   { href: "/simulation", label: "จำลองพอร์ต" },
+  { href: "/dca", label: "DCA ทองคำ" },
 ];
 
 export function Nav() {

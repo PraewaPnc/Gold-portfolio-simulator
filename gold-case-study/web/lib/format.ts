@@ -11,6 +11,14 @@ const compactFormatter = new Intl.NumberFormat("th-TH", {
 /** จำนวนเงินบาทแบบเต็ม เช่น 1,234,568 */
 export const thb = (n: number): string => integerFormatter.format(Math.round(n));
 
+const decimalFormatter = new Intl.NumberFormat("th-TH", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** ตัวเลขทศนิยม 2 ตำแหน่ง เช่น 12.34 — ใช้กับจำนวนหน่วยสินทรัพย์ที่สะสมได้ */
+export const dec2 = (n: number): string => decimalFormatter.format(n);
+
 const usdFormatter = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,

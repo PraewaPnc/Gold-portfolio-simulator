@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart3, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, BarChart3, Repeat, Sparkles, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 import { CagrFormula } from "@/components/CagrFormula";
@@ -131,8 +131,8 @@ export default function HomePage() {
 
       {/* ---------- โครงสร้างเคสศึกษา ---------- */}
       <section className="mt-12">
-        <h2 className="font-display text-xl font-semibold">เคสศึกษาแบ่งเป็น 2 ส่วน</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <h2 className="font-display text-xl font-semibold">เคสศึกษาแบ่งเป็น 3 ส่วน</h2>
+        <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Link href="/reference" className="panel group p-5 transition-colors hover:border-gold/50">
             <BarChart3 size={18} className="text-gold" aria-hidden />
             <h3 className="mt-3 font-display text-lg font-semibold">ข้อมูลย้อนหลัง</h3>
@@ -150,12 +150,25 @@ export default function HomePage() {
             <TrendingUp size={18} className="text-gold" aria-hidden />
             <h3 className="mt-3 font-display text-lg font-semibold">จำลองพอร์ต</h3>
             <p className="mt-2 text-[13px] leading-relaxed text-ink-dim">
-              เลือก persona ปรับระยะเวลาลงทุน ระดับความเสี่ยง และสัดส่วนทองคำ
+              เลือก persona ปรับระยะเวลาลงทุน ระดับความเสี่ยง สำรองเงินสด และสัดส่วนทองคำ
               แล้วดูผลลัพธ์ผ่าน Monte Carlo simulation 1,200 รอบ — fan chart รายปี
-              การกระจายมูลค่าปลายทาง efficient frontier และตารางเปรียบเทียบ 4 persona
+              การกระจายมูลค่าปลายทาง และตารางเปรียบเทียบ 4 persona
             </p>
             <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gold-light">
               เริ่มจำลอง <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
+            </span>
+          </Link>
+
+          <Link href="/dca" className="panel group p-5 transition-colors hover:border-gold/50">
+            <Repeat size={18} className="text-gold" aria-hidden />
+            <h3 className="mt-3 font-display text-lg font-semibold">DCA ทองคำ</h3>
+            <p className="mt-2 text-[13px] leading-relaxed text-ink-dim">
+              กำหนดเงินเริ่มต้น เงินที่ลงเพิ่มทุกเดือน และระยะเวลาลงทุน
+              แล้วย้อนดูบนราคาทองจริงรายเดือนว่าเงินที่ใส่ไปสะสมเท่าไร
+              มูลค่ารวมเป็นเท่าไร และต้นทุนเฉลี่ยต่อออนซ์อยู่ตรงไหน
+            </p>
+            <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gold-light">
+              ลองคำนวณ <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
             </span>
           </Link>
         </div>
