@@ -1,5 +1,8 @@
 # Gold Portfolio Simulator
 
+**Live: [gold-portfolio-simulator.vercel.app](https://gold-portfolio-simulator.vercel.app)** —
+deployed from `main` on every push.
+
 A case study answering **"how much gold belongs in a portfolio?"** — a web app driven by
 18.5 years of real historical prices for gold, Thai equity and bonds, instead of assumed figures.
 

@@ -1,5 +1,7 @@
 # Gold Allocation Case Study
 
+**Live: [gold-portfolio-simulator.vercel.app](https://gold-portfolio-simulator.vercel.app)**
+
 A web app answering *"how much gold belongs in a portfolio?"* using real historical prices
 rather than assumed figures.
 
@@ -210,7 +212,9 @@ several hundred monthly periods the discount factor near −100% overflows to in
 solver would report no root for a run whose answer is perfectly ordinary.
 
 **Every page is static.** The JSON is imported at build time; there are no runtime API calls, so
-the app deploys to any static host.
+the app deploys to any static host. It currently runs on Vercel, rebuilt from `main` on every
+push. Note that the Next.js app is not at the repository root, so the host's root directory has
+to be set to `gold-case-study/web` — otherwise the framework is not detected at all.
 
 ---
 
