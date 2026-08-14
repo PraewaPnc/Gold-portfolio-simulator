@@ -6,6 +6,7 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceArea,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -31,6 +32,46 @@ const RANGES = [
 ] as const;
 
 type RangeKey = (typeof RANGES)[number]["key"];
+
+/** สีของแถบวิกฤต ใช้สีเดียวกันทุกช่วงเพื่อไม่ให้แย่งสายตาไปจากเส้นราคา */
+const CRISIS_FILL = "#B25A4A";
+
+/**
+ * ช่วงวิกฤตเศรษฐกิจโลกครั้งใหญ่ที่อยู่ในกรอบข้อมูล (2551 เป็นต้นมา)
+ * ใช้ช่วงที่ตลาดปรับตัวรุนแรงจริง ไม่ใช่ช่วงของวิกฤตเชิงเศรษฐกิจทั้งหมด
+ * เพื่อให้แถบตรงกับสิ่งที่เห็นบนกราฟราคา
+ */
+const CRISES = [
+  {
+    key: "gfc",
+    label: "วิกฤตการเงินโลก (ซับไพรม์)",
+    start: "2008-09-01",
+    end: "2009-03-31",
+  },
+  {
+    key: "eurozone",
+    label: "วิกฤตหนี้สาธารณะยุโรป",
+    start: "2011-07-01",
+    end: "2011-12-31",
+  },
+  {
+    key: "covid",
+    label: "โควิด-19",
+    start: "2020-02-01",
+    end: "2020-04-30",
+  },
+  {
+    key: "inflation",
+    label: "เงินเฟ้อสูงและดอกเบี้ยขาขึ้น",
+    start: "2022-01-01",
+    end: "2022-10-31",
+  },
+] as const;
+
+/** หาว่าวันที่หนึ่ง ๆ ตกอยู่ในช่วงวิกฤตใดหรือไม่ — ใช้กับ tooltip */
+function crisisAt(date: string) {
+  return CRISES.find((c) => date >= c.start && date <= c.end);
+}
 
 interface Props {
   series: PricePoint[];
@@ -80,6 +121,27 @@ export function PriceChart({ series }: Props) {
     }
     const padding = (hi - lo) * 0.08 || 5;
     return [Math.max(0, lo - padding), hi + padding];
+  }, [data]);
+
+  /**
+   * แกน X เป็นแบบ category ค่า x1/x2 ของ ReferenceArea จึงต้องเป็นวันที่ที่มีอยู่จริงในชุดข้อมูล
+   * ไม่ใช่วันเริ่ม/จบของวิกฤตตรง ๆ — จึงต้อง snap ไปยังจุดข้อมูลที่ใกล้ที่สุดในกรอบ
+   * และตัดช่วงที่ไม่ทับกับช่วงเวลาที่ผู้ใช้เลือกออกไป
+   */
+  const crisisBands = useMemo(() => {
+    if (data.length === 0) return [];
+    const first = data[0].date;
+    const last = data[data.length - 1].date;
+
+    return CRISES.flatMap((c) => {
+      if (c.end < first || c.start > last) return [];
+      const x1 = data.find((d) => d.date >= c.start)?.date ?? first;
+      let x2 = last;
+      for (const d of data) if (d.date <= c.end) x2 = d.date;
+      // ช่วงที่เหลือแคบจนเหลือจุดเดียว วาดออกมาก็ไม่เห็นอะไร
+      if (x1 >= x2) return [];
+      return [{ ...c, x1, x2 }];
+    });
   }, [data]);
 
   return (
@@ -132,6 +194,20 @@ export function PriceChart({ series }: Props) {
             width={46}
             tickFormatter={(v: number) => v.toFixed(0)}
           />
+          {/*
+            วางไว้ก่อนเส้นราคา เพื่อให้แถบอยู่หลังเส้นเสมอ
+            ไม่ใส่เส้นขอบและป้ายกำกับ ให้เป็นพื้นหลังจาง ๆ — ชื่อวิกฤตไปอยู่ใน tooltip แทน
+          */}
+          {crisisBands.map((c) => (
+            <ReferenceArea
+              key={c.key}
+              x1={c.x1}
+              x2={c.x2}
+              fill={CRISIS_FILL}
+              fillOpacity={0.09}
+              stroke="none"
+            />
+          ))}
           <ReferenceLine y={100} stroke="#766F60" strokeDasharray="3 3" />
           <Tooltip
             cursor={{ stroke: "#766F60", strokeDasharray: "3 3" }}
@@ -140,6 +216,14 @@ export function PriceChart({ series }: Props) {
               return (
                 <div className="rounded-lg border border-line bg-panel px-3 py-2.5 font-mono text-xs text-ink shadow-lg">
                   <div className="mb-1.5 text-ink-faint">{formatAxisDate(String(label))}</div>
+                  {(() => {
+                    const c = crisisAt(String(label));
+                    return c ? (
+                      <div className="mb-1.5" style={{ color: CRISIS_FILL }}>
+                        ● {c.label}
+                      </div>
+                    ) : null;
+                  })()}
                   {SERIES.map((s) => {
                     const entry = payload.find((p) => p.dataKey === s.key);
                     if (!entry) return null;
@@ -173,6 +257,7 @@ export function PriceChart({ series }: Props) {
           ))}
         </LineChart>
       </ResponsiveContainer>
+
     </div>
   );
 }

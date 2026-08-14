@@ -94,7 +94,8 @@ export default function ReferencePage() {
       </p>
 
       {/* ---------- ตารางสถิติ ---------- */}
-      <section className="mt-10">
+      {/* จำกัดความกว้างให้พอดีตาราง แล้วจัดทั้งบล็อกไว้กลางหน้า ไม่ให้ตัวเลขยืดห่างกันเกินไป */}
+      <section className="mx-auto mt-10 max-w-4xl">
         <h2 className="font-display text-xl font-semibold">สรุปสถิติรายสินทรัพย์</h2>
         <p className="mt-1 text-[13px] text-ink-faint">
           คำนวณจากผลตอบแทนรายเดือน {dataRange.months} เดือน แปลงเป็นรายปี
@@ -152,7 +153,8 @@ export default function ReferencePage() {
       </section>
 
       {/* ---------- Correlation matrix ---------- */}
-      <section className="mt-10">
+      {/* เมทริกซ์มีแค่ 3 คอลัมน์ตัวเลข จึงบีบแคบกว่าตารางสถิติอีกขั้น */}
+      <section className="mx-auto mt-10 max-w-xl">
         <h2 className="font-display text-xl font-semibold">Correlation matrix</h2>
         <p className="mt-1 text-[13px] text-ink-faint">
           สหสัมพันธ์ของผลตอบแทนรายเดือน — ค่ายิ่งต่ำ ยิ่งช่วยกระจายความเสี่ยงได้ดี
