@@ -344,7 +344,7 @@ export function Simulator() {
           {/* ---- Stat cards ---- */}
           <div className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
-              { label: "เงินลงทุนในทองคำ", value: thb(capital * weights.gold), accent: true },
+              { label: "เงินลงทุนในทองคำ (บาท)", value: thb(capital * weights.gold), accent: true },
               { label: "ผลตอบแทนคาดหวัง / ปี", value: pct(stats.ret) },
               { label: "ความผันผวน (S.D.)", value: pct(stats.vol) },
               { label: "Sharpe Ratio", value: stats.sharpe.toFixed(2) },

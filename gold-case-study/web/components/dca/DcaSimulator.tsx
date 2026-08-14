@@ -143,11 +143,11 @@ export function DcaSimulator() {
           {/* ---- Stat cards ---- */}
           <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
-              { label: "เงินที่ลงทุนไปทั้งหมด", value: `${thb(result.invested)} บาท`, tone: "ink" },
-              { label: "มูลค่ารวมปัจจุบัน", value: `${thb(result.value)} บาท`, tone: "gold" },
+              { label: "เงินที่ลงทุนไปทั้งหมด (บาท)", value: thb(result.invested), tone: "ink" },
+              { label: "มูลค่ารวมปัจจุบัน (บาท)", value: thb(result.value), tone: "gold" },
               {
-                label: positive ? "กำไร" : "ขาดทุน",
-                value: `${thb(Math.abs(result.gain))} บาท`,
+                label: `${positive ? "กำไร" : "ขาดทุน"} (บาท)`,
+                value: thb(Math.abs(result.gain)),
                 sub: pctSigned(result.gainPct),
                 tone: positive ? "gold" : "danger",
               },
