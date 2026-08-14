@@ -1,10 +1,17 @@
 # Gold Portfolio Simulator
 
 A case study answering **"how much gold belongs in a portfolio?"** — a web app driven by
-18.5 years of real historical prices for gold, Thai equity and bonds, feeding a Monte Carlo
-simulation instead of assumed figures.
+18.5 years of real historical prices for gold, Thai equity and bonds, instead of assumed figures.
 
-The web app's interface is in Thai; all documentation is in English.
+Two ways of asking the question, kept separate on purpose:
+
+- **Portfolio simulation** — a Monte Carlo over 1,200 runs showing what an allocation could do
+  from here, as a distribution. The gold weight is the single control; a cash reserve is carved
+  out before anything is invested.
+- **DCA backtest** — what buying gold every month would actually have produced on the prices that
+  did occur, as one auditable equity curve with a money-weighted return.
+
+Neither is a forecast. The web app's interface is in Thai; all documentation is in English.
 
 ## Layout
 

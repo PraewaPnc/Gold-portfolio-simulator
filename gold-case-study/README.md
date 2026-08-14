@@ -3,6 +3,11 @@
 A web app answering *"how much gold belongs in a portfolio?"* using real historical prices
 rather than assumed figures.
 
+It answers that from two directions, deliberately kept apart. A **Monte Carlo simulation** asks
+what a given allocation could do from here, as a distribution. A **DCA backtest** asks what
+buying every month would actually have produced on the prices that did occur, as a single
+auditable curve. Neither is a forecast, and they are never mixed on the same screen.
+
 The project has two clearly separated layers:
 
 ```
@@ -19,15 +24,18 @@ gold-case-study/
     │   ├── page.tsx                    # Home — case study overview
     │   ├── reference/page.tsx          # Historical data — chart, stats, sources
     │   ├── reference/[asset]/page.tsx  # Per-asset detail and data tables
-    │   └── simulation/page.tsx         # Monte Carlo simulation
+    │   ├── simulation/page.tsx         # Monte Carlo simulation
+    │   └── dca/page.tsx                # DCA backtest on real monthly prices
     ├── components/
-    ├── lib/                            # Portfolio maths (kept separate from UI)
+    ├── lib/                            # Maths, kept separate from UI
+    │   ├── portfolio.ts                #   Allocation, cash reserve, Monte Carlo
+    │   └── dca.ts                      #   DCA schedule and money-weighted return
     └── data/                           # JSON produced by the data pipeline
 ```
 
 **The two layers meet at the JSON files in `web/data/`** — the pipeline writes them, the web app
-reads them. Every mean, volatility and correlation used in the Monte Carlo simulation therefore
-comes from real data.
+reads them. Every mean, volatility and correlation used in the Monte Carlo simulation, and every
+price the DCA backtest buys at, therefore comes from real data.
 
 ---
 
@@ -115,6 +123,9 @@ windows.
 - Line chart comparing all three assets rebased to index 100, with 6-month / 1-year / 5-year /
   10-year / all range options. Changing the range rebases to 100 at the start of that range, so
   you compare direction within the window rather than just zooming.
+- The four major global crises inside the data window are shaded as background bands. The crisis
+  name appears in the tooltip rather than as a chart label, so the bands stay behind the price
+  lines instead of competing with them.
 - Statistics table: CAGR, expected return, volatility, Sharpe, max drawdown, best and worst years.
 - Correlation matrix shaded by value.
 - Source cards per asset with ticker, provider, raw data range, methodology and a `PROXY` tag —
@@ -132,14 +143,51 @@ windows.
   return.
 
 ### Simulation (`/simulation`)
-- Four persona presets (near retirement / mid-career / early career / risk-averse).
-- Sliders for investment horizon and gold weight, buttons for risk tolerance, and a capital input.
-- Stacked allocation bar and four stat cards.
+- Four persona presets (near retirement / mid-career / early career / risk-averse), each with its
+  own cash reserve — largest for the persona with the least time to recover from a forced
+  withdrawal.
+- Sliders for investment horizon, cash reserve and gold weight, buttons for risk tolerance, and a
+  capital input.
+- Stacked allocation bar over the whole pot (gold / equity / bonds / cash) and four stat cards.
 - Monte Carlo fan chart over 1,200 runs (5–95% and 25–75% percentile bands).
 - Histogram of ending portfolio values.
-- Efficient frontier with the current portfolio marked.
 - Comparison table across all four personas.
 - A badge stating exactly which historical window the figures come from.
+
+**How the cash reserve fits in.** The reserve is carved out of the capital *first*, and only what
+remains is allocated across gold, equity and bonds. Ordering it that way keeps the risk level a
+property of the invested portfolio, so raising the reserve cannot drag the portfolio across a risk
+band boundary. The consequence is that the gold slider reads as a share of the invested part while
+the bar shows the share of the whole pot; the conversion between the two is printed under the
+slider. Cash compounds at the risk-free rate with zero volatility and is never rebalanced back
+into the market, which is what a reserve actually is.
+
+One property is worth using as a correctness check: because cash scales excess return and
+volatility by the same factor, **the Sharpe ratio is invariant to it**. Drag the reserve from 0%
+to 30% and every other figure moves while Sharpe stays put — the capital allocation line, on
+screen.
+
+### DCA (`/dca`)
+Answers a different question from the simulator: not *what could happen* but *what did happen if
+you had bought every month*. It runs on the real month-end price series rather than Monte Carlo,
+because the output wanted here is a single auditable equity curve, not a probability band.
+
+- Inputs: an initial amount, a monthly contribution, and a horizon of 1–18 years counted back
+  from the latest data. Setting either amount to zero turns it into a pure lump-sum or pure DCA
+  run, so the two can be compared directly.
+- Equity curve of cumulative contributions against portfolio value; the gap between them is the
+  unrealised gain.
+- Gold accumulated in ounces, with average cost against the latest price.
+- A **money-weighted annual return (IRR)** alongside the raw gain. Total gain over contributions
+  systematically understates DCA, because the last instalments have only been invested for a few
+  months — at the default settings the same run is +163% total but 16% a year.
+- How the run felt from inside: how many months the portfolio sat below what had been paid in,
+  and the deepest shortfall. That figure decides whether someone keeps contributing at all, so it
+  sits next to the outcome rather than in a footnote.
+- The same contribution schedule applied to Thai equity and bonds, for comparison.
+
+Purchases stop at the last complete month, matching how the rest of the case study treats the
+partial final month, but the latest price is still used as the closing valuation.
 
 ---
 
@@ -153,7 +201,13 @@ it avoids server/client hydration mismatches.
 from the real volatilities and correlations.
 
 **Portfolio maths is separate from the UI** — all of it lives in
-[`web/lib/portfolio.ts`](web/lib/portfolio.ts) as pure functions with no React dependency.
+[`web/lib/portfolio.ts`](web/lib/portfolio.ts) and [`web/lib/dca.ts`](web/lib/dca.ts) as pure
+functions with no React dependency.
+
+**IRR is solved by bisection**, not Newton–Raphson, so it needs no derivative and cannot escape
+its bracket. The bracket is widened from narrow to wide rather than starting at −99.99%: with
+several hundred monthly periods the discount factor near −100% overflows to infinity, and the
+solver would report no root for a run whose answer is perfectly ordinary.
 
 **Every page is static.** The JSON is imported at build time; there are no runtime API calls, so
 the app deploys to any static host.
@@ -167,8 +221,16 @@ the app deploys to any static host.
   diversification is needed most.
 - The 2008–present window was an unusually strong period for gold, so the simulation is
   structurally favourable to it. Future results may differ substantially.
-- Fees, taxes, rebalancing and additional contributions are not modelled.
+- Fees, taxes and rebalancing are not modelled anywhere. Ongoing contributions are absent from the
+  simulation specifically — modelling those is what the DCA page is for.
 - Gold is the global price converted to THB, not the domestic 96.5% bullion price.
+- The cash reserve earns a flat 1.5% a year, an assumed policy-rate level rather than a fetched
+  series, and inflation is not deducted anywhere. The reserve's purchasing power can fall even
+  though its figure never does.
+- The DCA page is the outcome of **one history that happened**, not a distribution. Choosing a
+  different window can reverse the conclusion, and this window flatters gold in particular. It
+  also assumes purchases land exactly on the month-end close in fractional units, which is closer
+  to a gold fund than to buying physical bullion.
 
 > This is an educational case study, not investment advice.
 > Past performance does not guarantee future results.
