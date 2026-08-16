@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { InfoHint } from "@/components/InfoHint";
 import { dataRange, formatThaiMonthYear, priceHistory } from "@/lib/data";
 import { dcaWindow, maxDcaYears, PRICE_OF, runDca, type DcaAssetKey } from "@/lib/dca";
 import { dec2, pct, pctSigned, thb, thbCompact } from "@/lib/format";
@@ -156,13 +157,23 @@ export function DcaSimulator() {
                 value: pct(result.irr),
                 sub: "ถ่วงน้ำหนักด้วยเงินและเวลา",
                 tone: result.irr >= 0 ? "ink" : "danger",
+                info:
+                  "Internal Rate of Return — อัตราผลตอบแทนที่ทำให้เงินทุกงวดที่ลงไป " +
+                  "คิดลดกลับมาแล้วเท่ากับมูลค่าพอร์ตวันนี้พอดี · " +
+                  "สูตร: หา r ที่ทำให้ Σ (เงินงวดที่ i ÷ (1+r)ⁱ) = 0 " +
+                  "แล้วแปลงเป็นรายปีด้วย (1+r)¹² − 1",
               },
             ].map((card) => (
               <div
                 key={card.label}
                 className="rounded-[10px] border border-line bg-panel2/50 px-4 py-3.5"
               >
-                <p className="label-caps">{card.label}</p>
+                <p className="label-caps flex items-center gap-1.5">
+                  {card.label}
+                  {"info" in card && card.info ? (
+                    <InfoHint label={`คำอธิบาย ${card.label}`} text={card.info} align="right" />
+                  ) : null}
+                </p>
                 <p
                   className={`mt-1.5 font-mono text-[19px] font-medium tabular ${
                     card.tone === "gold"

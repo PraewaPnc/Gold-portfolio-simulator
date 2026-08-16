@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { DataBadge } from "@/components/DataBadge";
 import { DcaSimulator } from "@/components/dca/DcaSimulator";
-import { dataRange, dataYears, formatThaiMonthYear, priceHistory } from "@/lib/data";
+import { dataRange, formatThaiMonthYear, priceHistory } from "@/lib/data";
 import { thb } from "@/lib/format";
 
 export const metadata: Metadata = { title: "DCA ทองคำ" };
@@ -20,9 +20,9 @@ export default function DcaPage() {
         </p>
         <h1 className="mt-3 font-display text-3xl font-semibold">ถ้าทยอยซื้อทองทุกเดือน</h1>
         <p className="mt-3 text-[14.5px] leading-relaxed text-ink-dim">
-          กำหนดเงินเริ่มต้น เงินที่ลงเพิ่มทุกเดือน และระยะเวลาลงทุน
-          แล้วดูว่าเงินที่ใส่ไปสะสมเท่าไรและมูลค่าทองที่ถืออยู่เป็นเท่าไรในแต่ละเดือน
-          — คำนวณจากราคาทองคำจริงรายเดือนย้อนหลัง {dataYears} ปี ไม่ใช่การสุ่มแบบหน้าจำลองพอร์ต
+          กำหนดแผนการลงทุนแบบถัวเฉลี่ยต้นทุน (DCA)
+          เพื่อดูการเติบโตของมูลค่าพอร์ตเทียบกับเงินต้นสะสมรายเดือน
+          โดยประมวลผลจากชุดข้อมูลราคาที่เกิดขึ้นจริงในอดีต
         </p>
         <div className="mt-4">
           <DataBadge />
