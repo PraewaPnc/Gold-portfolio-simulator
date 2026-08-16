@@ -268,6 +268,9 @@ export function weightsFromGold(goldW: number, cashW = 0): Weights {
   return { gold: invested * goldW, equity: rest * ratio, bond: rest * (1 - ratio), cash };
 }
 
+/** จำนวนเส้นทางจำลองรายรอบที่ส่งไปวาดทับแถบ percentile */
+export const SAMPLE_PATHS = 25;
+
 export interface FanPoint {
   year: number;
   p5: number;
@@ -280,6 +283,12 @@ export interface FanPoint {
   range5_95: number;
   base25: number;
   range25_75: number;
+  /**
+   * มูลค่าของเส้นทางตัวอย่างรายรอบ คีย์ s0…sN
+   * เส้น percentile ทั้งสามเรียบเพราะเป็นสถิติของทุกรอบ ไม่ใช่เส้นทางของรอบใดรอบหนึ่ง
+   * จึงวาดเส้นทางจริงจาง ๆ ทับไว้ให้เห็นว่าความเรียบนั้นเกิดจากอะไร
+   */
+  [samplePath: `s${number}`]: number;
 }
 
 export interface SimulationResult {
@@ -311,6 +320,7 @@ export function runMonteCarlo(
   model: MarketModel,
   nSims = 1200,
   seed = 20240101,
+  nSamplePaths = SAMPLE_PATHS,
 ): SimulationResult {
   const investedShare = Math.max(1 - w.cash, 0);
   // น้ำหนักภายใน "ส่วนที่ลงทุน" — หารกลับให้รวมกันเป็น 1 เพราะก้อนเงินสดถูกแยกออกไปแล้ว
@@ -342,14 +352,17 @@ export function runMonteCarlo(
     }
   }
 
+  const sampleCount = Math.min(Math.max(nSamplePaths, 0), nSims);
+
   const fan = valuesByYear.map((yearVals, y) => {
+    // sort บนสำเนา — yearVals ต้องคงลำดับเดิมไว้ เพราะ index คือหมายเลขรอบที่ใช้ดึงเส้นทางตัวอย่าง
     const sorted = [...yearVals].sort((a, b) => a - b);
     const p5 = percentile(sorted, 0.05);
     const p25 = percentile(sorted, 0.25);
     const p50 = percentile(sorted, 0.5);
     const p75 = percentile(sorted, 0.75);
     const p95 = percentile(sorted, 0.95);
-    return {
+    const point: FanPoint = {
       year: y,
       p5, p25, p50, p75, p95,
       base5: p5,
@@ -357,6 +370,8 @@ export function runMonteCarlo(
       base25: p25,
       range25_75: p75 - p25,
     };
+    for (let s = 0; s < sampleCount; s++) point[`s${s}`] = yearVals[s];
+    return point;
   });
 
   const ending = valuesByYear[h];

@@ -1,7 +1,7 @@
 "use client";
 
-import { Coins, TrendingUp } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Coins, Maximize2, TrendingUp, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   Bar,
@@ -16,6 +16,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { InfoHint } from "@/components/InfoHint";
 import { assetStats } from "@/lib/data";
 import { pct, thb, thbCompact } from "@/lib/format";
 import {
@@ -29,6 +30,7 @@ import {
   riskBandForGold,
   RISK_BANDS,
   runMonteCarlo,
+  SAMPLE_PATHS,
   weightsFromGold,
   type Persona,
   type RiskBand,
@@ -52,10 +54,74 @@ const MODEL = buildMarketModel(assetStats);
 /** สไลเดอร์ทองคำสูงสุด 40% — ใช้เป็นขอบบนของช่วงระดับที่เสี่ยงต่ำสุดตอนแสดงผล */
 const MAX_GOLD = 0.4;
 
+/** ปัดขึ้นเป็นตัวเลขกลม ๆ ที่อ่านง่ายบนแกน เช่น 797,500 → 800,000 */
+function niceStep(raw: number): number {
+  if (!Number.isFinite(raw) || raw <= 0) return 1;
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  for (const m of [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8]) {
+    if (m * mag >= raw) return m * mag;
+  }
+  return 10 * mag;
+}
+
 /** ข้อความบอกช่วงสัดส่วนทองคำของระดับความเสี่ยงหนึ่ง ๆ เช่น "11.5% – 17.5%" */
 function bandRangeText(b: RiskBand): string {
   const hi = Number.isFinite(b.hi) ? b.hi : MAX_GOLD;
   return `${pct(b.lo)} – ${pct(hi)}`;
+}
+
+interface PersonaRow {
+  id: string;
+  label: string;
+  age: number;
+  horizon: number;
+  gold: number;
+  cash: number;
+  s: { ret: number; vol: number };
+  median: number;
+  p5: number;
+}
+
+/** ตารางเปรียบเทียบ persona — ใช้ทั้งในหน้าปกติและในหน้าต่างขยาย จึงแยกออกมาไม่ให้เขียนซ้ำ */
+function PersonaTable({
+  rows,
+  activePersona,
+}: {
+  rows: PersonaRow[];
+  activePersona: string | null;
+}) {
+  return (
+    <table className="data-table min-w-[740px]">
+      <thead>
+        <tr>
+          <th>Persona</th>
+          <th>อายุ / ระยะเวลา</th>
+          <th className="text-right">ทองคำ</th>
+          <th className="text-right">เงินสด</th>
+          <th className="text-right">ผลตอบแทน/ปี</th>
+          <th className="text-right">ความผันผวน</th>
+          <th className="text-right">มัธยฐานปลายทาง</th>
+          <th className="text-right">กรณีเลวร้าย (5%)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((p) => (
+          <tr key={p.id} className={activePersona === p.id ? "bg-gold/[0.07]" : undefined}>
+            <td className="whitespace-nowrap font-medium text-ink">{p.label}</td>
+            <td className="whitespace-nowrap">
+              {p.age} ปี · {p.horizon} ปี
+            </td>
+            <td className="strong text-right">{pct(p.gold, 0)}</td>
+            <td className="strong text-right text-ink-dim">{pct(p.cash, 0)}</td>
+            <td className="strong text-right">{pct(p.s.ret)}</td>
+            <td className="strong text-right">{pct(p.s.vol)}</td>
+            <td className="strong text-right">{thb(p.median)}</td>
+            <td className="strong text-right text-ink-dim">{thb(p.p5)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 }
 
 export function Simulator() {
@@ -64,6 +130,22 @@ export function Simulator() {
   const [goldW, setGoldW] = useState(PROFILES.moderate.gold);
   const [cashW, setCashW] = useState(0.1);
   const [activePersona, setActivePersona] = useState<string | null>(null);
+  const [tableOpen, setTableOpen] = useState(false);
+
+  /** เปิด popup แล้วต้องปิดด้วย Escape ได้ และไม่ให้หน้าด้านหลังเลื่อนตาม */
+  useEffect(() => {
+    if (!tableOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setTableOpen(false);
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [tableOpen]);
 
   const weights = useMemo(() => weightsFromGold(goldW, cashW), [goldW, cashW]);
   const stats = useMemo(() => portfolioStats(weights, MODEL), [weights]);
@@ -88,6 +170,17 @@ export function Simulator() {
    * ลากทองข้ามเส้นแบ่งเมื่อไร ปุ่มที่ไฮไลต์ก็เลื่อนตามทันที
    */
   const activeBand = useMemo(() => riskBandForGold(goldW), [goldW]);
+
+  /**
+   * แกน Y ผูกกับแถบ p95 เท่านั้น ไม่ผูกกับเส้นทางตัวอย่าง
+   * เพราะเส้นทางที่โชคดีที่สุดในกลุ่มตัวอย่างวิ่งเลย p95 ไปมาก (ราว 40% ที่ 12 ปี
+   * และเกือบเท่าตัวที่ 30 ปี) ถ้าปล่อยให้แกนยืดตาม แถบ percentile จะถูกบีบจนอ่านไม่ออก
+   * เส้นที่หลุดกรอบจึงถูกตัดที่ขอบบนแทน (allowDataOverflow)
+   */
+  const yScale = useMemo(() => {
+    const step = niceStep(Math.max(...sim.fan.map((f) => f.p95)) / 4);
+    return { max: step * 4, ticks: [0, step, step * 2, step * 3, step * 4] };
+  }, [sim.fan]);
 
   const lastFan = sim.fan[sim.fan.length - 1];
   const medianEnd = lastFan?.p50 ?? capital;
@@ -343,14 +436,58 @@ export function Simulator() {
 
           {/* ---- Stat cards ---- */}
           <div className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {[
-              { label: "เงินลงทุนในทองคำ (บาท)", value: thb(capital * weights.gold), accent: true },
-              { label: "ผลตอบแทนคาดหวัง / ปี", value: pct(stats.ret) },
-              { label: "ความผันผวน (S.D.)", value: pct(stats.vol) },
-              { label: "Sharpe Ratio", value: stats.sharpe.toFixed(2) },
-            ].map((card) => (
+            {/*
+              infoAlign กันไม่ให้ tooltip ถูก overflow-hidden ของพาเนลตัด
+              การ์ดที่อยู่คอลัมน์ขวา (ทั้งตอน 2 และ 4 คอลัมน์) ต้องชิดขวา
+            */}
+            {(
+              [
+                { label: "เงินลงทุนในทองคำ (บาท)", value: thb(capital * weights.gold), accent: true },
+                {
+                  label: "ผลตอบแทนคาดหวัง / ปี",
+                  value: pct(stats.ret),
+                  info:
+                    "ค่าเฉลี่ยผลตอบแทนต่อปีของทั้งพอร์ต ถ่วงน้ำหนักตามสัดส่วนที่ถือ · " +
+                    `สูตร: Σ (น้ำหนัก × ผลตอบแทนเฉลี่ยของสินทรัพย์) + เงินสด × ${pct(assetStats.meta.riskFreeRate)}`,
+                  infoAlign: "right",
+                },
+                {
+                  label: "ความผันผวน (S.D.)",
+                  value: pct(stats.vol),
+                  info:
+                    "ผลตอบแทนจริงแต่ละปีเหวี่ยงห่างจากค่าเฉลี่ยแค่ไหน · " +
+                    "สูตร: √( Σ wᵢwⱼ × σᵢσⱼ × ρᵢⱼ ) · คิดสหสัมพันธ์ (ρ) ระหว่างสินทรัพย์ด้วย " +
+                    "จึงต่ำกว่าการเฉลี่ยความผันผวนตรง ๆ",
+                  infoAlign: "left",
+                },
+                {
+                  label: "Sharpe Ratio",
+                  value: stats.sharpe.toFixed(2),
+                  info:
+                    "วัดผลตอบแทนเทียบกับความเสี่ยงที่รับ — ยิ่งสูงยิ่งคุ้ม · " +
+                    `สูตร: (ผลตอบแทน − ${pct(assetStats.meta.riskFreeRate)}) ÷ ความผันผวน · ` +
+                    "เทียบระหว่างสัดส่วนการลงทุน",
+                  infoAlign: "right",
+                },
+              ] as {
+                label: string;
+                value: string;
+                accent?: boolean;
+                info?: string;
+                infoAlign?: "left" | "right";
+              }[]
+            ).map((card) => (
               <div key={card.label} className="rounded-[10px] border border-line bg-panel2/50 px-4 py-3.5">
-                <p className="label-caps">{card.label}</p>
+                <p className="label-caps flex items-center gap-1.5">
+                  {card.label}
+                  {card.info ? (
+                    <InfoHint
+                      label={`คำอธิบาย ${card.label}`}
+                      text={card.info}
+                      align={card.infoAlign ?? "right"}
+                    />
+                  ) : null}
+                </p>
                 <p
                   className={`mt-1.5 font-mono text-[19px] font-medium tabular ${
                     card.accent ? "text-gold-light" : "text-ink"
@@ -373,6 +510,16 @@ export function Simulator() {
               5th–95th percentile, แถบเข้มคือ 25th–75th, เส้นกลางคือค่ามัธยฐาน ·
               โอกาสที่มูลค่าปลายทางต่ำกว่าเงินลงทุนตั้งต้น {pct(sim.probLoss, 0)}
             </p>
+            {/*
+              กันคนดูเข้าใจผิดว่าเส้นกลางคือเส้นทางที่จะเกิดขึ้นจริง
+              ซึ่งเป็นจุดที่ fan chart หลอกตาได้มากที่สุด
+            */}
+            <p className="mb-3.5 text-xs leading-relaxed text-ink-faint">
+              เส้นจาง {SAMPLE_PATHS} เส้นคือเส้นทางจริงของ {SAMPLE_PATHS} รอบแรก —
+              เส้นกลางที่เรียบไม่ใช่เส้นทางของรอบใดรอบหนึ่ง แต่เป็นค่ามัธยฐานที่คำนวณใหม่ทุกปี
+              ความหยักของแต่ละรอบจึงหักล้างกันหมด · แกนตั้งตรึงไว้กับแถบ 95th percentile
+              เส้นที่วิ่งเกินกรอบจะถูกตัดที่ขอบบน
+            </p>
             <ResponsiveContainer width="100%" height={270}>
               <ComposedChart data={sim.fan} margin={{ top: 5, right: 10, left: 0, bottom: 4 }}>
                 <CartesianGrid stroke="#3A3427" strokeDasharray="2 4" vertical={false} />
@@ -384,6 +531,9 @@ export function Simulator() {
                   label={{ value: "ปีที่", position: "insideBottom", offset: -3, fill: "#766F60", fontSize: 11 }}
                 />
                 <YAxis
+                  domain={[0, yScale.max]}
+                  ticks={yScale.ticks}
+                  allowDataOverflow
                   tickFormatter={thbCompact}
                   tick={{ fill: "#A79E8C", fontSize: 11 }}
                   tickLine={false}
@@ -411,6 +561,22 @@ export function Simulator() {
                 <Area dataKey="range5_95" stackId="a" stroke="none" fill={GOLD} fillOpacity={0.12} isAnimationActive={false} />
                 <Area dataKey="base25" stackId="b" stroke="none" fill="transparent" isAnimationActive={false} />
                 <Area dataKey="range25_75" stackId="b" stroke="none" fill={GOLD} fillOpacity={0.28} isAnimationActive={false} />
+                {/*
+                  เส้นทางจริงรายรอบ วาดก่อนเส้นมัธยฐานเพื่อให้เส้นมัธยฐานอยู่บนสุด
+                  จางมากโดยตั้งใจ — หน้าที่ของมันคือแสดง "เนื้อ" ของการจำลอง ไม่ใช่ให้อ่านทีละเส้น
+                */}
+                {Array.from({ length: SAMPLE_PATHS }, (_, i) => (
+                  <Line
+                    key={`s${i}`}
+                    dataKey={`s${i}`}
+                    stroke={GOLD_LIGHT}
+                    strokeWidth={1}
+                    strokeOpacity={0.15}
+                    dot={false}
+                    activeDot={false}
+                    isAnimationActive={false}
+                  />
+                ))}
                 <Line dataKey="p50" stroke={GOLD_LIGHT} strokeWidth={2} dot={false} isAnimationActive={false} />
               </ComposedChart>
             </ResponsiveContainer>
@@ -461,50 +627,73 @@ export function Simulator() {
 
           {/* ---- Persona table ---- */}
           <section>
-            <h3 className="text-sm font-medium text-ink">เปรียบเทียบ 4 Persona</h3>
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="text-sm font-medium text-ink">เปรียบเทียบ 4 Persona</h3>
+              <button
+                type="button"
+                onClick={() => setTableOpen(true)}
+                aria-label="ขยายตารางเปรียบเทียบ 4 Persona"
+                title="ขยายตาราง"
+                className="inline-flex flex-none rounded-md border border-line p-1.5 text-ink-dim
+                           transition-colors hover:border-gold/60 hover:text-gold-light"
+              >
+                <Maximize2 size={13} aria-hidden />
+              </button>
+            </div>
             <p className="mb-3 mt-1 text-xs text-ink-faint">
               ผลลัพธ์เมื่อแต่ละ persona เริ่มด้วยเงิน {thb(capital)} บาท ตามที่ตั้งไว้ด้านซ้าย
               (simulation {N_SIMS_PERSONA} รอบต่อ persona) · คอลัมน์ทองคำเป็นสัดส่วนของส่วนที่ลงทุน
               ส่วนเงินสดเป็นสัดส่วนของเงินทั้งก้อน
             </p>
             <div className="overflow-x-auto">
-              <table className="data-table min-w-[740px]">
-                <thead>
-                  <tr>
-                    <th>Persona</th>
-                    <th>อายุ / ระยะเวลา</th>
-                    <th className="text-right">ทองคำ</th>
-                    <th className="text-right">เงินสด</th>
-                    <th className="text-right">ผลตอบแทน/ปี</th>
-                    <th className="text-right">ความผันผวน</th>
-                    <th className="text-right">มัธยฐานปลายทาง</th>
-                    <th className="text-right">กรณีเลวร้าย (5%)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {personaRows.map((p) => (
-                    <tr
-                      key={p.id}
-                      className={activePersona === p.id ? "bg-gold/[0.07]" : undefined}
-                    >
-                      <td className="whitespace-nowrap font-medium text-ink">{p.label}</td>
-                      <td className="whitespace-nowrap">
-                        {p.age} ปี · {p.horizon} ปี
-                      </td>
-                      <td className="strong text-right">{pct(p.gold, 0)}</td>
-                      <td className="strong text-right text-ink-dim">{pct(p.cash, 0)}</td>
-                      <td className="strong text-right">{pct(p.s.ret)}</td>
-                      <td className="strong text-right">{pct(p.s.vol)}</td>
-                      <td className="strong text-right">{thb(p.median)}</td>
-                      <td className="strong text-right text-ink-dim">{thb(p.p5)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <PersonaTable rows={personaRows} activePersona={activePersona} />
             </div>
           </section>
         </div>
       </div>
+
+      {/*
+        หน้าต่างขยายตาราง — ใช้ fixed จึงไม่ถูก overflow-hidden ของพาเนลตัด
+        ปิดได้ด้วยปุ่ม X, กด Escape หรือคลิกพื้นหลัง
+      */}
+      {tableOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-bg/80 p-4 backdrop-blur-sm"
+          onClick={() => setTableOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="ตารางเปรียบเทียบ 4 Persona"
+            className="panel max-h-[88vh] w-full max-w-5xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-line p-5">
+              <div>
+                <h3 className="text-sm font-medium text-ink">เปรียบเทียบ 4 Persona</h3>
+                <p className="mt-1 text-xs leading-relaxed text-ink-faint">
+                  ผลลัพธ์เมื่อแต่ละ persona เริ่มด้วยเงิน {thb(capital)} บาท (simulation{" "}
+                  {N_SIMS_PERSONA} รอบต่อ persona) · คอลัมน์ทองคำเป็นสัดส่วนของส่วนที่ลงทุน
+                  ส่วนเงินสดเป็นสัดส่วนของเงินทั้งก้อน
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTableOpen(false)}
+                aria-label="ปิดหน้าต่าง"
+                autoFocus
+                className="inline-flex flex-none rounded-md border border-line p-1.5 text-ink-dim
+                           transition-colors hover:border-gold/60 hover:text-gold-light"
+              >
+                <X size={14} aria-hidden />
+              </button>
+            </div>
+            <div className="max-h-[calc(88vh-92px)] overflow-auto p-5">
+              <PersonaTable rows={personaRows} activePersona={activePersona} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
