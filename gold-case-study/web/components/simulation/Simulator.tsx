@@ -24,7 +24,6 @@ import { assetStats } from "@/lib/data";
 import { money, moneyCompact, pct } from "@/lib/format";
 import {
   buildMarketModel,
-  equityShareForGold,
   histogram,
   MAX_CASH,
   PERSONAS,
@@ -173,23 +172,12 @@ export function Simulator() {
   const weights = useMemo(() => weightsFromGold(goldW, cashW), [goldW, cashW]);
   const stats = useMemo(() => portfolioStats(weights, model), [weights, model]);
 
-  /**
-   * สถิติของ "ส่วนที่ลงทุน" ล้วน ๆ (ไม่รวมเงินสด)
-   * ใช้กับข้อความระดับความเสี่ยง เพราะระดับความเสี่ยงนิยามจากสัดส่วนทองคำในพอร์ตลงทุน
-   * ถ้าเอาความผันผวนที่เจือจางด้วยเงินสดมาแสดงตรงนั้น ป้ายกำกับกับตัวเลขจะขัดกันเอง
-   */
-  const investedStats = useMemo(
-    () => portfolioStats(weightsFromGold(goldW), model),
-    [goldW, model],
-  );
-
   const sim = useMemo(
     () => runMonteCarlo(weights, horizon, capital, model, N_SIMS),
     [weights, horizon, capital, model],
   );
 
   const histData = useMemo(() => histogram(sim.ending), [sim.ending]);
-  const equityShare = useMemo(() => equityShareForGold(goldW), [goldW]);
 
   /**
    * ระดับความเสี่ยงอนุมานจากสัดส่วนทองคำโดยตรง จึงไม่มีทางขัดกับสไลเดอร์
@@ -328,12 +316,7 @@ export function Simulator() {
               จึงบอกช่วงของระดับนั้นไว้ด้วย เพื่อให้ตรวจสอบได้ว่าทำไมสไลเดอร์ตำแหน่งนี้ถึงตกช่วงนี้
             */}
             <p className="mt-2 font-mono text-[11px] leading-relaxed text-ink-faint">
-              ช่วง &ldquo;{activeBand.label}&rdquo; คือ ทองคำ {bandRangeText(activeBand)} ·
-              ความผันผวนเฉพาะส่วนที่ลงทุน {pct(investedStats.vol)}
-            </p>
-            <p className="mt-1 font-mono text-[11px] leading-relaxed text-ink-faint">
-              แบ่งส่วนลงทุนที่ไม่ใช่ทองคำเป็น หุ้นสหรัฐฯ {pct(equityShare, 0)} / พันธบัตร{" "}
-              {pct(1 - equityShare, 0)}
+              ช่วง &ldquo;{activeBand.label}&rdquo; คือสัดส่วนทองคำ {bandRangeText(activeBand)}
             </p>
           </div>
 
@@ -383,17 +366,13 @@ export function Simulator() {
               }}
               className="slider"
             />
-            {/* ปิดลูปอีกทาง — บอกว่าตำแหน่งที่ลากอยู่ตกในระดับไหน ตรงกับปุ่มที่ไฮไลต์ด้านบน */}
-            <p className="mt-1 font-mono text-[11px] leading-relaxed text-ink-faint">
-              ตกในระดับ &ldquo;{activeBand.label}&rdquo; · หมุดของระดับนี้คือ {pct(activeBand.gold, 0)}
-            </p>
             {/*
               สไลเดอร์คิดเป็นสัดส่วนของส่วนที่ลงทุน แต่แถบด้านขวาแสดงสัดส่วนของเงินทุนทั้งก้อน
               ถ้ากันเงินสดไว้ ตัวเลขสองที่จะไม่ตรงกัน จึงแปลงให้ดูตรงนี้เลย
             */}
             {cashW > 0 && (
               <p className="mt-1 font-mono text-[11px] leading-relaxed text-ink-faint">
-                = {pct(weights.gold, 1)} ของเงินทุนทั้งก้อน
+                เทียบเป็นสัดส่วนของเงินทุนทั้งก้อน {pct(weights.gold, 1)}
               </p>
             )}
           </div>

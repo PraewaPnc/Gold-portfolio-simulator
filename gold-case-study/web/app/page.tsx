@@ -142,40 +142,6 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
-
-        {/* ---------- วิธีการ ---------- */}
-        <section className="mt-12">
-          <h2 className="font-display text-xl font-semibold">วิธีการ</h2>
-          <ol className="mt-4 space-y-3">
-            {[
-              {
-                title: "ดึงข้อมูลราคาย้อนหลังจริง",
-                body: "data-pipeline ดึงราคาทองคำตลาดโลก, ETF อ้างอิงดัชนี S&P 500, อัตราผลตอบแทนพันธบัตรรัฐบาลสหรัฐฯ 10 ปี และอัตราแลกเปลี่ยน USDTHB รันซ้ำได้ทุกเมื่อเพื่ออัปเดตข้อมูล",
-              },
-              {
-                title: "คำนวณสถิติของสินทรัพย์ ทั้งสองฐานสกุลเงิน",
-                body: "แปลงเป็นผลตอบแทนรายเดือน คำนวณ annualized return, volatility และ correlation matrix สองชุด — ฐาน USD และฐานบาทที่คูณอัตราแลกเปลี่ยนเข้าไปแล้ว จึงเทียบกันได้ว่าค่าเงินเพิ่มความผันผวนเท่าไร",
-              },
-              {
-                title: "ขับเคลื่อน simulation ด้วยตัวเลขชุดเดียวกัน",
-                body: "เว็บแอปอ่านค่า mean / volatility / correlation จริงไปสร้าง covariance matrix แล้วสุ่มผลตอบแทนที่มีสหสัมพันธ์กันด้วย Cholesky decomposition",
-              },
-            ].map((step, i) => (
-              <li key={step.title} className="flex gap-3.5">
-                <span
-                  className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border
-                             border-gold/40 font-mono text-[11px] text-gold-light"
-                >
-                  {i + 1}
-                </span>
-                <div>
-                  <p className="text-[14px] font-medium text-ink">{step.title}</p>
-                  <p className="mt-0.5 text-[13px] leading-relaxed text-ink-dim">{step.body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
       </div>
     </div>
   );

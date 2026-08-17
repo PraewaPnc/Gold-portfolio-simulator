@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import { CurrencyToggle } from "@/components/CurrencyToggle";
 
 const LINKS = [
-  { href: "/", label: "ภาพรวม" },
   { href: "/reference", label: "ข้อมูลย้อนหลัง" },
   { href: "/simulation", label: "จำลองพอร์ต" },
   { href: "/dca", label: "DCA ทองคำ" },
@@ -17,7 +16,7 @@ export function Nav() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-bg/90 backdrop-blur">
+    <header className="sticky top-0 z-30 bg-bg/90 backdrop-blur">
       <nav className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 text-ink transition-colors hover:text-gold-light">
           <Coins size={17} className="shrink-0 text-gold" aria-hidden />
