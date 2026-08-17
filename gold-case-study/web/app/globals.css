@@ -75,6 +75,18 @@
     @apply border-gold bg-panel2 text-gold-light;
   }
 
+  /* ---- ที่นั่งบนกระดานหกระดับความเสี่ยง ---- */
+  .seesaw-seat {
+    @apply z-10 cursor-pointer whitespace-nowrap rounded-md border border-line bg-panel px-2.5 py-1.5
+           text-[10.5px] font-medium text-ink-dim shadow-[0_2px_4px_rgba(0,0,0,0.35)]
+           outline-none transition-colors hover:border-gold/60 hover:text-ink
+           focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2
+           focus-visible:ring-offset-bg;
+  }
+  .seesaw-seat[data-active="true"] {
+    @apply border-gold bg-gold text-bg shadow-[0_2px_10px_rgba(201,162,39,0.4)];
+  }
+
   /* ---- Tables ---- */
   .data-table {
     @apply w-full border-collapse text-[12.5px];

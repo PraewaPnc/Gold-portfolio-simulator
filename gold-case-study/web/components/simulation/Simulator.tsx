@@ -17,6 +17,7 @@ import {
 } from "recharts";
 
 import { InfoHint } from "@/components/InfoHint";
+import { RiskSeesaw } from "@/components/simulation/RiskSeesaw";
 import { convertAmount, currencySymbol, defaultCapital, unitLabel } from "@/lib/currency";
 import { useCurrency } from "@/lib/currency-context";
 import { assetStats } from "@/lib/data";
@@ -82,14 +83,19 @@ interface PersonaRow {
 function PersonaTable({
   rows,
   activePersona,
+  large = false,
 }: {
   rows: PersonaRow[];
   activePersona: string | null;
+  /** หน้าต่างขยายมีพื้นที่กว้างกว่าตารางในไซด์บาร์มาก จึงให้เลือกใช้ตัวหนังสือใหญ่ขึ้นได้ */
+  large?: boolean;
 }) {
   // มูลค่าปลายทางสองคอลัมน์สุดท้ายเป็นจำนวนเงิน จึงต้องรู้สกุลที่เลือกอยู่
   const { currency } = useCurrency();
   return (
-    <table className="data-table min-w-[740px]">
+    <table
+      className={`data-table min-w-[740px] ${large ? "text-[14.5px] [&_th]:text-[12px]" : ""}`}
+    >
       <thead>
         <tr>
           <th>Persona</th>
@@ -305,23 +311,18 @@ export function Simulator() {
           </div>
 
           <div>
-            <p className="label-caps mb-2">ระดับความเสี่ยงของพอร์ต</p>
-            {/* เรียงจากเสี่ยงต่ำไปสูงให้ตรงกับสายตา — RISK_BANDS เรียงตามทองน้อยไปมาก จึงต้องกลับด้าน */}
-            <div role="group" aria-label="ระดับความเสี่ยงของพอร์ต" className="flex gap-1.5">
-              {[...RISK_BANDS].reverse().map((b) => (
-                <button
-                  key={b.key}
-                  type="button"
-                  className="seg-btn"
-                  data-active={activeBand.key === b.key}
-                  aria-pressed={activeBand.key === b.key}
-                  title={`สัดส่วนทองคำ ${bandRangeText(b)} · กดเพื่อไปที่ ${pct(b.gold, 0)}`}
-                  onClick={() => changeRisk(b.key)}
-                >
-                  {b.label}
-                </button>
-              ))}
-            </div>
+            <p className="label-caps mb-2 text-center">ระดับความเสี่ยงของพอร์ต</p>
+            {/* กระดานหก — อนุรักษ์นิยมกับเชิงรุกอยู่คนละฝั่ง ปานกลางคือจุดสมดุลตรงกลาง
+                RISK_BANDS เรียงตามทองน้อยไปมาก (เชิงรุก→ปานกลาง→อนุรักษ์นิยม) จึงต้องกลับด้าน
+                ให้เป็นซ้าย(อนุรักษ์นิยม)→กลาง→ขวา(เชิงรุก) ตรงกับฝั่งของกระดาน */}
+            <RiskSeesaw
+              bands={[...RISK_BANDS].reverse() as [RiskBand, RiskBand, RiskBand]}
+              activeKey={activeBand.key}
+              goldW={goldW}
+              maxGold={MAX_GOLD}
+              bandRangeText={bandRangeText}
+              onSelect={changeRisk}
+            />
             {/*
               ปุ่มที่ไฮไลต์เป็น "ผลลัพธ์" ที่อ่านจากสัดส่วนทองคำ ไม่ใช่ค่าที่เก็บเป็น state แยก
               จึงบอกช่วงของระดับนั้นไว้ด้วย เพื่อให้ตรวจสอบได้ว่าทำไมสไลเดอร์ตำแหน่งนี้ถึงตกช่วงนี้
@@ -727,7 +728,7 @@ export function Simulator() {
               </button>
             </div>
             <div className="max-h-[calc(88vh-92px)] overflow-auto p-5">
-              <PersonaTable rows={personaRows} activePersona={activePersona} />
+              <PersonaTable rows={personaRows} activePersona={activePersona} large />
             </div>
           </div>
         </div>
