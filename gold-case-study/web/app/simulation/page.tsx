@@ -3,10 +3,9 @@ import { Info, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { DataBadge } from "@/components/DataBadge";
+import { ModelInputs } from "@/components/simulation/ModelInputs";
 import { Simulator } from "@/components/simulation/Simulator";
 import { assetStats, dataRange, dataYears } from "@/lib/data";
-import { pct } from "@/lib/format";
-import { ASSETS } from "@/lib/types";
 
 export const metadata: Metadata = { title: "จำลองพอร์ต" };
 
@@ -22,7 +21,8 @@ export default function SimulationPage() {
           เลือก persona ปรับระยะเวลาลงทุน ระดับความเสี่ยง สำรองเงินสด และสัดส่วนทองคำ
           เพื่อดูผลลัพธ์ที่เป็นไปได้ของเงินทั้งก้อน — ผลตอบแทนคาดหวัง ความผันผวน
           และสหสัมพันธ์ที่ใช้ในการจำลองทั้งหมดประมาณจากข้อมูลราคาย้อนหลังจริง ไม่ใช่ตัวเลขสมมติฐาน
-          โดยกันสำรองเงินสดออกก่อน แล้วจึงจัดสรรส่วนที่เหลือเป็นทองคำ หุ้นไทย และตราสารหนี้
+          โดยกันสำรองเงินสดออกก่อน แล้วจึงจัดสรรส่วนที่เหลือเป็นทองคำ หุ้นสหรัฐฯ (S&amp;P 500)
+          และพันธบัตรรัฐบาลสหรัฐฯ
         </p>
         <div className="mt-4">
           <DataBadge />
@@ -31,29 +31,7 @@ export default function SimulationPage() {
 
       {/* ---- Input ที่ใช้ขับเคลื่อน simulation ---- */}
       <section className="mt-6">
-        <div className="panel flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-          <span className="label-caps">Input จากข้อมูลจริง</span>
-          {ASSETS.map((key) => {
-            const a = assetStats.assets[key];
-            return (
-              <span key={key} className="font-mono text-[11.5px] tabular text-ink-dim">
-                <span className="text-ink">{a.label}</span> μ {pct(a.annualReturn)} · σ{" "}
-                {pct(a.annualVolatility)}
-              </span>
-            );
-          })}
-          <span className="font-mono text-[11.5px] tabular text-ink-dim">
-            <span className="text-ink">ρ</span> ทอง–หุ้น{" "}
-            {assetStats.correlation.gold.equity.toFixed(2)} · ทอง–ตราสารหนี้{" "}
-            {assetStats.correlation.gold.bond.toFixed(2)}
-          </span>
-          <Link
-            href="/reference"
-            className="ml-auto text-[11.5px] text-gold-light underline-offset-2 hover:underline"
-          >
-            ดูที่มาของตัวเลข →
-          </Link>
-        </div>
+        <ModelInputs />
       </section>
 
       <div className="mt-4">
@@ -73,21 +51,22 @@ export default function SimulationPage() {
           </li>
           <li>
             ค่าสถิติประมาณจากข้อมูลย้อนหลัง {dataYears} ปี ({dataRange.months} เดือน)
-            ซึ่งเป็นช่วงที่ทองคำให้ผลตอบแทนสูงเป็นพิเศษ ผลในอนาคตอาจต่างไปอย่างมีนัยสำคัญ
+            ซึ่งเป็นช่วงที่ทั้งทองคำและหุ้นสหรัฐฯ ให้ผลตอบแทนสูงเป็นพิเศษ
+            ผลในอนาคตอาจต่างไปอย่างมีนัยสำคัญ
           </li>
           <li>
             การจำลองไม่ได้รวมค่าธรรมเนียมการซื้อขาย ค่าบริหารจัดการกองทุน ภาษี
             การปรับสัดส่วนพอร์ต (rebalancing) และเงินลงทุนเพิ่มระหว่างทาง
           </li>
           <li>
-            สำรองเงินสดคิดผลตอบแทนคงที่ที่อัตราปราศจากความเสี่ยง{" "}
-            {pct(assetStats.meta.riskFreeRate)} ต่อปีตลอดช่วงจำลอง
-            ซึ่งเป็นค่าสมมติฐานที่ไม่ได้ดึงจาก API และไม่ได้หักเงินเฟ้อ
+            สำรองเงินสดคิดผลตอบแทนคงที่ที่อัตราปราศจากความเสี่ยงของสกุลที่เลือกตลอดช่วงจำลอง
+            (ดูค่าที่ใช้จริงในแถบ input ด้านบน) และไม่ได้หักเงินเฟ้อ
             ในความเป็นจริงอัตราดอกเบี้ยเงินฝากเปลี่ยนตามเวลาและมักต่ำกว่าเงินเฟ้อ
-            อำนาจซื้อของเงินก้อนนี้จึงลดลงได้แม้ตัวเลขจะไม่ติดลบ
+            อำนาจซื้อของเงินก้อนนี้จึงลดลงได้แม้ตัวเลขจะไม่ติดลบ · {assetStats.meta.riskFreeRateNote}
           </li>
           <li>
-            ข้อมูลหุ้นไทยและตราสารหนี้บางส่วนเป็นข้อมูล proxy — ดูรายละเอียดที่หน้า{" "}
+            ดัชนีผลตอบแทนรวมของพันธบัตรสร้างขึ้นจากอัตราผลตอบแทน 10 ปี ไม่ใช่มูลค่าหน่วยลงทุนจริง
+            ของกองทุนพันธบัตร — ดูรายละเอียดที่หน้า{" "}
             <Link href="/reference" className="text-gold-light underline-offset-2 hover:underline">
               ข้อมูลย้อนหลัง
             </Link>
@@ -95,6 +74,11 @@ export default function SimulationPage() {
           <li>
             ผลลัพธ์ใช้ตัวเลขสุ่มที่กำหนด seed ไว้ จึงทำซ้ำได้เหมือนเดิมทุกครั้ง
             แต่ก็หมายความว่าตัวเลขที่เห็นเป็นเพียงหนึ่งชุดตัวอย่างจากความเป็นไปได้ทั้งหมด
+          </li>
+          <li>
+            ฐานเงินบาทจำลองความเสี่ยงค่าเงินผ่านค่าสถิติที่ประมาณจากอดีตเท่านั้น
+            ไม่ได้จำลองอัตราแลกเปลี่ยนเป็นตัวแปรแยก และไม่รวมต้นทุนการแปลงสกุลเงิน
+            หรือทางเลือกในการป้องกันความเสี่ยงค่าเงิน (hedging)
           </li>
         </ul>
         <p className="mt-4 border-t border-line pt-3 text-[12px] leading-relaxed text-ink-faint">

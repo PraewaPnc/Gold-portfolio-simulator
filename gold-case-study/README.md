@@ -3,12 +3,17 @@
 **Live: [gold-portfolio-simulator.vercel.app](https://gold-portfolio-simulator.vercel.app)**
 
 A web app answering *"how much gold belongs in a portfolio?"* using real historical prices
-rather than assumed figures.
+rather than assumed figures. The portfolio holds gold, US equity (S&P 500) and US Treasuries.
 
 It answers that from two directions, deliberately kept apart. A **Monte Carlo simulation** asks
 what a given allocation could do from here, as a distribution. A **DCA backtest** asks what
 buying every month would actually have produced on the prices that did occur, as a single
 auditable curve. Neither is a forecast, and they are never mixed on the same screen.
+
+All three assets are USD-denominated, so the site can be read in **either currency basis** —
+a toggle in the nav switches between an American investor's view and a Thai one. It is not a
+unit conversion: the THB basis has its own returns, volatilities, correlations and risk-free
+rate, because currency movement is a second source of risk.
 
 The project has two clearly separated layers:
 
@@ -31,7 +36,8 @@ gold-case-study/
     ├── components/
     ├── lib/                            # Maths, kept separate from UI
     │   ├── portfolio.ts                #   Allocation, cash reserve, Monte Carlo
-    │   └── dca.ts                      #   DCA schedule and money-weighted return
+    │   ├── dca.ts                      #   DCA schedule and money-weighted return
+    │   └── currency.ts                 #   USD → THB derivation, in one place
     └── data/                           # JSON produced by the data pipeline
 ```
 
@@ -82,33 +88,45 @@ npm run typecheck  # TypeScript check
 
 | Asset | Source | Status |
 | --- | --- | --- |
-| Gold (THB) | `GC=F` × `USDTHB=X` — Yahoo Finance | Real data (global spot-equivalent price) |
-| Thai equity | `TDEX.BK` — ThaiDEX SET50 ETF, Yahoo Finance | **Proxy** for the SET index |
-| Bonds | `DGS10` — US 10Y Treasury, FRED | **Proxy** for Thai government bonds |
+| Gold | `GC=F` — COMEX front-month futures, Yahoo Finance | Real data (global spot-equivalent price) |
+| US equity | `SPY` — SPDR S&P 500 ETF, Yahoo Finance | Real data (total return, dividend-adjusted) |
+| US Treasury | `DGS10` — US 10Y yield, FRED | Real yield; total-return index is **reconstructed** |
 
-Coverage: January 2008 to the present — about 18.5 years / 222 months. The start date is set by
-the shortest series, the Thai equity ETF.
+Two more series are fetched that are not investable assets: `USDTHB=X` for the THB basis, and
+`DGS3MO` (US 3-month T-bill) for the USD risk-free rate.
 
-Statistics are computed from **monthly** data (222 observations); the chart uses a **weekly**
-series (971 points) so that the short ranges have enough resolution.
+Coverage: July 2006 to the present — exactly 20 years / 240 months. The start date is chosen
+deliberately (see `DEFAULT_START` in `fetch_data.py`) so a plain re-run keeps this round window.
 
-### Why proxies are used
+Statistics are computed from **monthly** data (240 observations); the chart uses a **weekly**
+series (1,048 points) so that the short ranges have enough resolution.
 
-- **Thai equity** — the SET index tickers on Yahoo Finance (`^SET.BK`, `^SETI`, `^SET50`) return
-  no usable history: `^SET.BK` gives only a single current quote and the others are empty. The
-  substitute is a Bangkok-listed ETF tracking the SET50, which is denominated in THB and
-  dividend-adjusted. SET50 covers the 50 largest listed companies, so it tracks the SET closely
-  but excludes mid- and small-caps.
-- **Bonds** — there is no free API for Thai government bond yields (ThaiBMA and the Bank of
-  Thailand both require registration or an API key), so the US 10-year is used instead.
+### Currency bases
+
+Every statistic is computed twice by the pipeline: once on the USD levels, once on the same
+levels multiplied by USDTHB. The effect is not a uniform shift — FX *lowers* gold's volatility
+for a Thai investor (17.2% → 15.8%) while *raising* the bond's (7.5% → 9.8%), and gold's
+correlation with US equity flips from +0.08 to −0.05.
+
+The JSON stores only the USD basis plus a per-row exchange rate; the web app derives the THB
+levels from those two. The derivation reproduces the pipeline's independently computed THB
+statistics to within 0.001 percentage points, so the chart and the tables cannot disagree.
+
+### On sources and their limits
+
+- **US equity** — an S&P 500 ETF rather than the `^GSPC` index, because the index is price-only
+  and excludes dividends worth roughly 2%/year. The ETF is what an investor can actually hold.
+  `^GSPC` remains as a last-resort fallback and *is* flagged `PROXY` if it ever kicks in.
+- **US Treasury** — the yield series is exact, but a yield is not a return. The total-return
+  index is reconstructed from duration and convexity (formula in the pipeline README), so it
+  excludes fund fees and spreads and stays tagged `PROXY` for that reason.
 - **Gold** — no free, scriptable source for true spot (XAU/USD) exists: Yahoo has no
   `XAUUSD=X` ticker, stooq is behind a JavaScript proof-of-work challenge, and FRED has removed
   its LBMA gold fixing series (404). Front-month COMEX futures (`GC=F`) is the closest
   obtainable stand-in and typically differs from spot by less than 1%.
 
-Both proxies are tagged `PROXY` on the **Historical data** page and stated in the disclaimer on
-every page. To switch to a real Thai source later, replace the relevant CSV in `raw/` and re-run
-`compute_stats.py` — no code changes needed (see the pipeline README).
+Anything tagged `PROXY` is marked on the **Historical data** page and stated in the disclaimer on
+every page.
 
 ---
 
@@ -117,9 +135,9 @@ every page. To switch to a real Thai source later, replace the relevant CSV in `
 ### Home (`/`)
 Case study overview and a table comparing compound annual growth rate (CAGR) across trailing
 1-year, 5-year, 10-year and full-period windows, with the CAGR formula shown above it. The
-comparison makes the central point visible: gold returned about 25% over the past year but
-about 8.7% annualised over the full period, and bonds are negative over both the 5- and 10-year
-windows.
+comparison makes the central point visible: on the THB basis gold returned about 25% over the
+past year but about 9.0% annualised over the full period, and bonds are negative over both the
+5- and 10-year windows.
 
 ### Historical data (`/reference`)
 - Line chart comparing all three assets rebased to index 100, with 6-month / 1-year / 5-year /
@@ -129,7 +147,8 @@ windows.
   name appears in the tooltip rather than as a chart label, so the bands stay behind the price
   lines instead of competing with them.
 - Statistics table: CAGR, expected return, volatility, Sharpe, max drawdown, best and worst years.
-- Correlation matrix shaded by value.
+- Correlation matrix shaded by value. Switching currency changes every cell — a compact way to
+  show that FX is a common factor pushing all three assets together.
 - Source cards per asset with ticker, provider, raw data range, methodology and a `PROXY` tag —
   **click a card to open that asset's detail page**.
 
@@ -138,9 +157,10 @@ windows.
 - Returns by period (1 / 5 / 10 years / all) including cumulative return and the drawdown within
   each window.
 - Calendar-year returns with diverging bars.
-- A full 224-row monthly data table with a year filter that accepts both Buddhist and Gregorian
-  years. Price columns adapt per asset: gold shows both THB and USD per ounce, equity shows the
-  ETF close, bonds show the yield.
+- A full 242-row monthly data table with a year filter that accepts both Buddhist and Gregorian
+  years. Price columns adapt per asset and per currency: on the THB basis gold and equity show
+  both currencies side by side, so you can see whether a month moved because of the asset or
+  because of the baht. Bonds show the yield, which is currency-independent.
 - Rows for a month still in progress are labelled, because their "change" is not a full-month
   return.
 
@@ -151,6 +171,9 @@ windows.
 - Sliders for investment horizon, cash reserve and gold weight, buttons for risk tolerance, and a
   capital input.
 - Stacked allocation bar over the whole pot (gold / equity / bonds / cash) and four stat cards.
+- Switching currency rebuilds the market model outright — means, volatilities, correlations and
+  the risk-free rate all come from the selected basis — and converts the capital you typed at the
+  latest FX rate so the same money is being simulated.
 - Monte Carlo fan chart over 1,200 runs (5–95% and 25–75% percentile bands).
 - Histogram of ending portfolio values.
 - Comparison table across all four personas.
@@ -174,7 +197,7 @@ Answers a different question from the simulator: not *what could happen* but *wh
 you had bought every month*. It runs on the real month-end price series rather than Monte Carlo,
 because the output wanted here is a single auditable equity curve, not a probability band.
 
-- Inputs: an initial amount, a monthly contribution, and a horizon of 1–18 years counted back
+- Inputs: an initial amount, a monthly contribution, and a horizon of 1–20 years counted back
   from the latest data. Setting either amount to zero turns it into a pure lump-sum or pure DCA
   run, so the two can be compared directly.
 - Equity curve of cumulative contributions against portfolio value; the gap between them is the
@@ -186,7 +209,10 @@ because the output wanted here is a single auditable equity curve, not a probabi
 - How the run felt from inside: how many months the portfolio sat below what had been paid in,
   and the deepest shortfall. That figure decides whether someone keeps contributing at all, so it
   sits next to the outcome rather than in a footnote.
-- The same contribution schedule applied to Thai equity and bonds, for comparison.
+- The same contribution schedule applied to US equity and Treasuries, for comparison.
+- Switching currency re-runs the backtest against gold priced in that currency and converts the
+  contribution schedule, which separates how much of the gain came from gold and how much from
+  the baht.
 
 Purchases stop at the last complete month, matching how the rest of the case study treats the
 partial final month, but the latest price is still used as the closing valuation.
@@ -206,6 +232,10 @@ from the real volatilities and correlations.
 [`web/lib/portfolio.ts`](web/lib/portfolio.ts) and [`web/lib/dca.ts`](web/lib/dca.ts) as pure
 functions with no React dependency.
 
+**Currency conversion lives in exactly one file**, [`web/lib/currency.ts`](web/lib/currency.ts).
+The DCA engine and the Monte Carlo never see a currency: they are handed price rows and a market
+model already in the selected basis, so no component can convert twice or forget to convert.
+
 **IRR is solved by bisection**, not Newton–Raphson, so it needs no derivative and cannot escape
 its bracket. The bracket is widened from narrow to wide rather than starting at −99.99%: with
 several hundred monthly periods the discount factor near −100% overflows to infinity, and the
@@ -223,14 +253,17 @@ to be set to `gold-case-study/web` — otherwise the framework is not detected a
 - The model assumes annual returns are normally distributed with constant statistics. Real markets
   have crisis periods with far worse tails, and correlations that shift exactly when
   diversification is needed most.
-- The 2008–present window was an unusually strong period for gold, so the simulation is
-  structurally favourable to it. Future results may differ substantially.
+- The 2006–present window was an unusually strong period for both gold and US equity, so the
+  simulation is structurally favourable to them. Future results may differ substantially.
 - Fees, taxes and rebalancing are not modelled anywhere. Ongoing contributions are absent from the
   simulation specifically — modelling those is what the DCA page is for.
-- Gold is the global price converted to THB, not the domestic 96.5% bullion price.
-- The cash reserve earns a flat 1.5% a year, an assumed policy-rate level rather than a fetched
-  series, and inflation is not deducted anywhere. The reserve's purchasing power can fall even
-  though its figure never does.
+- Gold is the global price, not the domestic 96.5% bullion price.
+- On the USD basis the cash reserve earns the averaged 3-month T-bill rate over the window, which
+  is fetched. On the THB basis it earns a flat 1.5%, an assumed policy-rate level. Inflation is
+  not deducted in either case, so the reserve's purchasing power can fall even though its figure
+  never does.
+- The THB basis captures currency risk only through statistics estimated from the past. FX is not
+  simulated as a separate variable, and neither conversion costs nor hedging are modelled.
 - The DCA page is the outcome of **one history that happened**, not a distribution. Choosing a
   different window can reverse the conclusion, and this window flatters gold in particular. It
   also assumes purchases land exactly on the month-end close in fractional units, which is closer

@@ -3,23 +3,8 @@ import Link from "next/link";
 
 import { CagrFormula } from "@/components/CagrFormula";
 import { DataBadge } from "@/components/DataBadge";
-import { assetStats, dataRange, dataYears, formatThaiDate } from "@/lib/data";
-import { pct, pctSigned } from "@/lib/format";
-import { ASSETS } from "@/lib/types";
-
-const ASSET_COLOR: Record<string, string> = {
-  gold: "text-gold-light",
-  equity: "text-equity",
-  bond: "text-bond",
-};
-
-const ASSET_DOT: Record<string, string> = {
-  gold: "bg-gold",
-  equity: "bg-equity",
-  bond: "bg-bond",
-};
-
-const TRAILING = assetStats.trailingReturns;
+import { TrailingTable } from "@/components/home/TrailingTable";
+import { dataRange, dataYears, formatThaiDate } from "@/lib/data";
 
 export default function HomePage() {
   return (
@@ -33,8 +18,8 @@ export default function HomePage() {
           ถ้ามีเงิน 1 ล้านบาท ควรลงทุนทองคำเท่าไร?
         </h1>
         <p className="mt-4 text-[15px] leading-relaxed text-ink-dim">
-          เราใช้ข้อมูลจริงย้อนหลัง {dataYears} ปีของทองคำ หุ้นไทย และตราสารหนี้
-          เพื่อวิเคราะห์ผลตอบแทน ความผันผวน และความสัมพันธ์ระหว่างสินทรัพย์
+          เราใช้ข้อมูลจริงย้อนหลัง 20 ปีของทองคำ หุ้นสหรัฐฯ (S&amp;P 500)
+          และพันธบัตรรัฐบาลสหรัฐฯ เพื่อวิเคราะห์ผลตอบแทน ความผันผวน และความสัมพันธ์ระหว่างสินทรัพย์
           จากนั้นจำลองพอร์ตด้วย Monte Carlo Simulation
           เพื่อประเมินว่าสัดส่วนทองคำที่แตกต่างกันส่งผลต่อความเสี่ยงและผลลัพธ์ของพอร์ตอย่างไร
           ภายใต้ลักษณะของผู้ลงทุนแต่ละแบบ
@@ -74,54 +59,7 @@ export default function HomePage() {
           <CagrFormula />
         </div>
 
-        <div className="panel mt-3 overflow-x-auto">
-          <table className="data-table mx-auto w-auto">
-            <thead>
-              <tr>
-                <th className="!text-center">สินทรัพย์</th>
-                {TRAILING.map((w) => (
-                  <th key={w.key} className="w-[92px] !text-center">
-                    {w.label}
-                    {w.key === "all" && (
-                      <span className="mt-0.5 block font-mono text-[9.5px] normal-case tracking-normal text-ink-faint">
-                        {w.years} ปี
-                      </span>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {ASSETS.map((key) => (
-                <tr key={key}>
-                  <td className="whitespace-nowrap">
-                    <span className="inline-flex items-center gap-2 text-ink">
-                      <span className={`h-2.5 w-2.5 rounded-sm ${ASSET_DOT[key]}`} aria-hidden />
-                      {assetStats.assets[key].label}
-                    </span>
-                  </td>
-                  {TRAILING.map((w) => {
-                    const s = w.assets[key];
-                    return (
-                      <td key={w.key} className="text-center align-top">
-                        <span
-                          className={`block font-mono text-[15px] tabular ${
-                            s.cagr >= 0 ? ASSET_COLOR[key] : "text-danger"
-                          }`}
-                        >
-                          {pctSigned(s.cagr)}
-                        </span>
-                        <span className="mt-0.5 block font-mono text-[10.5px] tabular text-ink-faint">
-                          ผันผวน {pct(s.annualVolatility, 0)}
-                        </span>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TrailingTable />
 
         <p className="mt-2.5 text-[11.5px] leading-relaxed text-ink-faint">
           คำนวณจากข้อมูลรายเดือนถึง {formatThaiDate(dataRange.end)}  · ช่วง &ldquo;ทั้งหมด&rdquo; คือ {formatThaiDate(dataRange.start)} – {formatThaiDate(dataRange.end)} ({dataYears} ปี) ·
@@ -181,11 +119,11 @@ export default function HomePage() {
           {[
             {
               title: "ดึงข้อมูลราคาย้อนหลังจริง",
-              body: "data-pipeline ดึงราคาทองคำตลาดโลกคูณอัตราแลกเปลี่ยน USDTHB, ETF อ้างอิงดัชนี SET50 และอัตราผลตอบแทนพันธบัตร 10 ปี รันซ้ำได้ทุกเมื่อเพื่ออัปเดตข้อมูล",
+              body: "data-pipeline ดึงราคาทองคำตลาดโลก, ETF อ้างอิงดัชนี S&P 500, อัตราผลตอบแทนพันธบัตรรัฐบาลสหรัฐฯ 10 ปี และอัตราแลกเปลี่ยน USDTHB รันซ้ำได้ทุกเมื่อเพื่ออัปเดตข้อมูล",
             },
             {
-              title: "คำนวณสถิติของสินทรัพย์",
-              body: "แปลงเป็นผลตอบแทนรายเดือน คำนวณ annualized return, volatility และ correlation matrix แล้วเขียนออกเป็นไฟล์ JSON",
+              title: "คำนวณสถิติของสินทรัพย์ ทั้งสองฐานสกุลเงิน",
+              body: "แปลงเป็นผลตอบแทนรายเดือน คำนวณ annualized return, volatility และ correlation matrix สองชุด — ฐาน USD และฐานบาทที่คูณอัตราแลกเปลี่ยนเข้าไปแล้ว จึงเทียบกันได้ว่าค่าเงินเพิ่มความผันผวนเท่าไร",
             },
             {
               title: "ขับเคลื่อน simulation ด้วยตัวเลขชุดเดียวกัน",

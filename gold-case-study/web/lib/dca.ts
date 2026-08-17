@@ -1,4 +1,4 @@
-import type { MonthlyPoint } from "./types";
+import type { MonthlyRow } from "./types";
 
 /**
  * แบบจำลอง DCA ทำงานบน "ราคาจริงรายเดือน" ที่ดึงมาจริง ไม่ใช่การสุ่ม
@@ -51,24 +51,29 @@ export interface DcaResult {
   monthsUnderwater: number;
 }
 
-/** ราคาที่ใช้ซื้อของแต่ละสินทรัพย์ — ทองใช้ราคาบาทจริง ที่เหลือใช้ดัชนีฐาน 100 */
+/**
+ * ราคาที่ใช้ซื้อของแต่ละสินทรัพย์ — ทองใช้ราคาต่อออนซ์จริง ที่เหลือใช้ดัชนีฐาน 100
+ *
+ * แถวที่ส่งเข้ามาต้องผ่าน toCurrencyMonthly() มาแล้ว ทั้งราคาและดัชนีจึงอยู่ในสกุล
+ * ที่ผู้ใช้เลือก การคำนวณ DCA ที่เหลือจึงไม่ต้องรู้เรื่องสกุลเงินเลย
+ */
 export const PRICE_OF = {
-  gold: (r: MonthlyPoint) => r.goldThbPerOz,
-  equity: (r: MonthlyPoint) => r.equity,
-  bond: (r: MonthlyPoint) => r.bond,
+  gold: (r: MonthlyRow) => r.goldPerOz,
+  equity: (r: MonthlyRow) => r.equity,
+  bond: (r: MonthlyRow) => r.bond,
 } as const;
 
 export type DcaAssetKey = keyof typeof PRICE_OF;
 
 export interface DcaWindow {
   /** งวดที่ซื้อได้ — เดือนที่ปิดครบเดือนแล้วเท่านั้น */
-  buyRows: MonthlyPoint[];
+  buyRows: MonthlyRow[];
   /**
    * จุดตีมูลค่าปิดท้ายจากเดือนล่าสุดที่ยังไม่ครบเดือน (ถ้ามี)
    * ไม่ซื้อเพิ่มในงวดนี้ เพื่อให้คงหลักเดียวกับสถิติส่วนอื่นของเคสที่ตัดเดือนไม่เต็มทิ้ง
    * แต่ยังได้ใช้ราคาล่าสุดที่มีเป็นมูลค่าปัจจุบัน
    */
-  finalRow: MonthlyPoint | null;
+  finalRow: MonthlyRow | null;
 }
 
 /**
@@ -76,7 +81,7 @@ export interface DcaWindow {
  * completeThrough คือวันสุดท้ายที่ถือว่าเดือนนั้นปิดครบแล้ว (dataRange.end)
  */
 export function dcaWindow(
-  monthly: MonthlyPoint[],
+  monthly: MonthlyRow[],
   years: number,
   completeThrough: string,
 ): DcaWindow {
@@ -89,8 +94,11 @@ export function dcaWindow(
   };
 }
 
-/** จำนวนปีสูงสุดที่ข้อมูลรองรับ — ปัดลงให้ได้ปีเต็ม */
-export function maxDcaYears(monthly: MonthlyPoint[], completeThrough: string): number {
+/**
+ * จำนวนปีสูงสุดที่ข้อมูลรองรับ — ปัดลงให้ได้ปีเต็ม
+ * นับจากจำนวนแถว ไม่ใช่ระดับราคา จึงเท่ากันทุกสกุลเงินและรับแถวดิบได้เลย
+ */
+export function maxDcaYears(monthly: { date: string }[], completeThrough: string): number {
   return Math.floor(monthly.filter((r) => r.date <= completeThrough).length / 12);
 }
 
@@ -156,7 +164,7 @@ export function irrMonthly(flows: number[]): number {
  */
 export function runDca(
   win: DcaWindow,
-  priceOf: (r: MonthlyPoint) => number,
+  priceOf: (r: MonthlyRow) => number,
   input: DcaInput,
 ): DcaResult {
   const { buyRows, finalRow } = win;

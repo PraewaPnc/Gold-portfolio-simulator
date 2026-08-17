@@ -4,7 +4,8 @@
 deployed from `main` on every push.
 
 A case study answering **"how much gold belongs in a portfolio?"** — a web app driven by
-18.5 years of real historical prices for gold, Thai equity and bonds, instead of assumed figures.
+20 years of real historical prices for gold, US equity (S&P 500) and US Treasuries, instead of
+assumed figures.
 
 Two ways of asking the question, kept separate on purpose:
 
@@ -13,6 +14,11 @@ Two ways of asking the question, kept separate on purpose:
   out before anything is invested.
 - **DCA backtest** — what buying gold every month would actually have produced on the prices that
   did occur, as one auditable equity curve with a money-weighted return.
+
+All three assets are USD-denominated, so a toggle in the nav switches the whole site between a
+**USD basis** and a **THB basis**. It is not a unit conversion — the THB basis has its own
+returns, volatilities, correlations and risk-free rate, because currency movement is a second
+source of risk for a Thai investor.
 
 Neither is a forecast. The web app's interface is in Thai; all documentation is in English.
 
@@ -40,12 +46,14 @@ See [`data-pipeline/README.md`](gold-case-study/data-pipeline/README.md) to refr
 
 | Asset | Source | Status |
 | --- | --- | --- |
-| Gold | `GC=F` × `USDTHB=X` (Yahoo Finance) | Real data (futures, tracks spot closely) |
-| Thai equity | `TDEX.BK` — ThaiDEX SET50 ETF | **Proxy** for the SET index |
-| Bonds | `DGS10` — US 10Y Treasury (FRED) | **Proxy** for Thai government bonds |
+| Gold | `GC=F` — COMEX front-month futures (Yahoo Finance) | Real data (tracks spot closely) |
+| US equity | `SPY` — SPDR S&P 500 ETF (Yahoo Finance) | Real data (total return, dividend-adjusted) |
+| US Treasury | `DGS10` — US 10Y yield (FRED) | Real yield; total-return index **reconstructed** |
+| USD/THB | `USDTHB=X` (Yahoo Finance) | Real data — drives the THB basis |
+| Risk-free (USD) | `DGS3MO` — US 3M T-bill (FRED) | Real data |
 
-Why proxies are necessary, and every limitation that follows from them, is documented in the
-[project README](gold-case-study/README.md#why-proxies-are-used).
+What each source can and cannot stand for, and every limitation that follows, is documented in
+the [project README](gold-case-study/README.md#on-sources-and-their-limits).
 
 > This is an educational case study, not investment advice.
 > Past performance does not guarantee future results.

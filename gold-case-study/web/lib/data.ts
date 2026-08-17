@@ -1,7 +1,7 @@
 import assetStatsJson from "@/data/asset-stats.json";
 import priceHistoryJson from "@/data/price-history.json";
 
-import type { AssetStats, PriceHistory } from "./types";
+import type { AssetKey, AssetStats, PriceHistory } from "./types";
 
 /**
  * ข้อมูลทั้งหมดมาจาก data-pipeline/ ซึ่งเขียนไฟล์ JSON ทับที่ web/data/
@@ -12,10 +12,22 @@ export const priceHistory = priceHistoryJson as unknown as PriceHistory;
 
 export const dataRange = assetStats.meta.dataRange;
 
+/**
+ * ชื่อสินทรัพย์ไม่ขึ้นกับฐานสกุลเงิน (ทั้งสองชุดเก็บชื่อเดียวกัน)
+ * จึงอ่านจากชุดใดก็ได้ — มีไว้ให้ server component ที่เรียก useCurrency() ไม่ได้
+ */
+export function assetLabel(key: AssetKey): string {
+  return assetStats.byCurrency[assetStats.meta.defaultCurrency].assets[key].label;
+}
+
+export function assetLabelEn(key: AssetKey): string {
+  return assetStats.byCurrency[assetStats.meta.defaultCurrency].assets[key].labelEn;
+}
+
 /** จำนวนปีของข้อมูลแบบปัดทศนิยม 1 ตำแหน่ง เช่น "18.6" */
 export const dataYears = dataRange.years.toFixed(1);
 
-/** เช่น "ม.ค. 2551 – ก.ค. 2569" สำหรับแสดงบน badge */
+/** เช่น "ก.ค. 2549 – ก.ค. 2569" สำหรับแสดงบน badge */
 export function formatDataRangeLabel(): string {
   return `${formatThaiMonthYear(dataRange.start)} – ${formatThaiMonthYear(dataRange.end)}`;
 }

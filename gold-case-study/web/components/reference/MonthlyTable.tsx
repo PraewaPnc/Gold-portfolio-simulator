@@ -3,24 +3,43 @@
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { toCurrencyMonthly, unitLabel } from "@/lib/currency";
+import { useCurrency } from "@/lib/currency-context";
 import { dataRange, formatThaiDate, formatThaiMonthYear } from "@/lib/data";
-import { pctSigned, thb, usd } from "@/lib/format";
-import type { AssetKey, MonthlyPoint } from "@/lib/types";
+import { pctSigned, price } from "@/lib/format";
+import type { AssetKey, Currency, MonthlyPoint, MonthlyRow } from "@/lib/types";
 
 interface Column {
   header: string;
-  render: (row: MonthlyPoint) => string;
+  render: (row: MonthlyRow) => string;
 }
 
-/** คอลัมน์ระดับราคาจริงต่างกันไปตามชนิดสินทรัพย์ */
-const LEVEL_COLUMNS: Record<AssetKey, Column[]> = {
-  gold: [
-    { header: "ราคา (บาท/ออนซ์)", render: (r) => thb(r.goldThbPerOz) },
-    { header: "ราคา (USD/ออนซ์)", render: (r) => usd(r.goldUsdPerOz) },
-  ],
-  equity: [{ header: "ราคาปิด ETF (บาท)", render: (r) => r.equityClose.toFixed(2) }],
-  bond: [{ header: "Yield 10 ปี (%)", render: (r) => r.bondYieldPct.toFixed(2) }],
-};
+/**
+ * คอลัมน์ระดับราคาจริงต่างกันไปตามชนิดสินทรัพย์ และตามสกุลที่เลือก
+ *
+ * ฐานบาทแสดงราคา USD ควบไปด้วย เพราะราคาสินทรัพย์ทุกตัวเกิดในตลาดสกุลดอลลาร์
+ * การเห็นทั้งสองคอลัมน์ทำให้ตรวจได้ว่าเดือนที่ราคาบาทขึ้นนั้นมาจากตัวสินทรัพย์หรือจากค่าเงิน
+ * ส่วน Yield ของพันธบัตรเป็นอัตราผลตอบแทน จึงเป็นตัวเลขเดียวกันทั้งสองสกุล
+ */
+function levelColumnsFor(assetKey: AssetKey, currency: Currency): Column[] {
+  const unit = unitLabel(currency);
+  const columns: Record<AssetKey, Column[]> = {
+    gold: [
+      { header: `ราคา (${unit}/ออนซ์)`, render: (r) => price(r.goldPerOz, currency) },
+      ...(currency === "thb"
+        ? [{ header: "ราคา (USD/ออนซ์)", render: (r: MonthlyRow) => price(r.goldUsdPerOz, "usd") }]
+        : []),
+    ],
+    equity: [
+      { header: `ราคาปิด ETF (${unit})`, render: (r) => price(r.equityClose, currency) },
+      ...(currency === "thb"
+        ? [{ header: "ราคาปิด ETF (USD)", render: (r: MonthlyRow) => price(r.equityCloseUsd, "usd") }]
+        : []),
+    ],
+    bond: [{ header: "Yield 10 ปี (%)", render: (r) => r.bondYieldPct.toFixed(2) }],
+  };
+  return columns[assetKey];
+}
 
 const ACCENT: Record<AssetKey, string> = {
   gold: "text-gold-light",
@@ -35,14 +54,19 @@ interface Props {
 
 export function MonthlyTable({ assetKey, rows }: Props) {
   const [query, setQuery] = useState("");
+  const { currency } = useCurrency();
 
   /**
    * เรียงจากใหม่ไปเก่า พร้อมคำนวณผลตอบแทนของเดือนนั้นจากดัชนีผลตอบแทนรวม
    * (คำนวณจากลำดับเดิมที่เรียงเก่าไปใหม่ ก่อนจะกลับด้าน)
+   *
+   * แปลงเป็นสกุลที่เลือกก่อนคำนวณ ผลตอบแทนรายเดือนที่แสดงจึงเป็นของสกุลนั้นจริง ๆ
+   * ไม่ใช่ผลตอบแทน USD ที่เอามาแปะข้างราคาบาท
    */
   const enriched = useMemo(() => {
-    const withChange = rows.map((row, i) => {
-      const prev = i > 0 ? rows[i - 1][assetKey] : null;
+    const converted = toCurrencyMonthly(rows, currency);
+    const withChange = converted.map((row, i) => {
+      const prev = i > 0 ? converted[i - 1][assetKey] : null;
       return {
         row,
         index: row[assetKey],
@@ -50,7 +74,7 @@ export function MonthlyTable({ assetKey, rows }: Props) {
       };
     });
     return withChange.reverse();
-  }, [rows, assetKey]);
+  }, [rows, assetKey, currency]);
 
   const filtered = useMemo(() => {
     const q = query.trim();
@@ -62,7 +86,10 @@ export function MonthlyTable({ assetKey, rows }: Props) {
     });
   }, [enriched, query]);
 
-  const levelColumns = LEVEL_COLUMNS[assetKey];
+  const levelColumns = useMemo(
+    () => levelColumnsFor(assetKey, currency),
+    [assetKey, currency],
+  );
 
   return (
     <div>

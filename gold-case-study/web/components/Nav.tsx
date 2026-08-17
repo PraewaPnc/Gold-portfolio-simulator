@@ -4,6 +4,8 @@ import { Coins } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { CurrencyToggle } from "@/components/CurrencyToggle";
+
 const LINKS = [
   { href: "/", label: "ภาพรวม" },
   { href: "/reference", label: "ข้อมูลย้อนหลัง" },
@@ -22,6 +24,7 @@ export function Nav() {
           <span className="font-display text-[15px] font-semibold">การจัดสรรเงินลงทุนในทองคำ</span>
         </Link>
 
+        <div className="flex items-center gap-2 sm:gap-3">
         <ul className="flex items-center gap-1 text-[13px]">
           {LINKS.map((link) => {
             const active = pathname === link.href;
@@ -42,6 +45,8 @@ export function Nav() {
             );
           })}
         </ul>
+          <CurrencyToggle />
+        </div>
       </nav>
     </header>
   );

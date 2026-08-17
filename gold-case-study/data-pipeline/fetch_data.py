@@ -1,10 +1,14 @@
 """
 fetch_data.py — ดึงข้อมูลราคาย้อนหลังดิบของสินทรัพย์ 3 ประเภท แล้วเก็บเป็น CSV ใน raw/
 
-สินทรัพย์:
-  1. ทองคำ      : ราคาทองคำ USD/ounce (COMEX futures) x อัตราแลกเปลี่ยน USDTHB  -> ราคาในหน่วยบาท
-  2. หุ้นไทย     : ETF ที่อ้างอิงดัชนี SET50 ซื้อขายในตลาดหลักทรัพย์ไทย (สกุลบาท, ปรับปันผลแล้ว)
-  3. ตราสารหนี้  : อัตราผลตอบแทนพันธบัตรรัฐบาลสหรัฐฯ อายุ 10 ปี จาก FRED (ใช้เป็น proxy)
+สินทรัพย์ (ทั้งหมดเป็นสินทรัพย์สกุลดอลลาร์สหรัฐฯ):
+  1. ทองคำ        : ราคาทองคำ USD/ounce (COMEX futures)
+  2. หุ้นสหรัฐฯ    : ETF ที่อ้างอิงดัชนี S&P 500 (สกุล USD, ปรับเงินปันผลแล้ว)
+  3. พันธบัตรสหรัฐฯ : อัตราผลตอบแทนพันธบัตรรัฐบาลสหรัฐฯ อายุ 10 ปี จาก FRED
+
+นอกจากนี้ยังดึงอีกสองชุดที่ไม่ใช่สินทรัพย์ลงทุน แต่จำเป็นต่อการคำนวณ:
+  - อัตราแลกเปลี่ยน USDTHB  : ใช้แปลงทุกสินทรัพย์เป็นฐานเงินบาท (เว็บสลับสกุลเงินได้)
+  - ตั๋วเงินคลัง 3 เดือน      : ใช้เป็นอัตราผลตอบแทนปราศจากความเสี่ยงฝั่ง USD
 
 สคริปต์นี้ทำหน้าที่ "ดึงข้อมูลดิบ" อย่างเดียว ไม่คำนวณสถิติ
 การคำนวณทั้งหมดอยู่ใน compute_stats.py ซึ่งอ่านไฟล์ CSV จาก raw/
@@ -32,7 +36,10 @@ import requests
 warnings.filterwarnings("ignore")
 
 RAW_DIR = Path(__file__).parent / "raw"
-DEFAULT_START = "2005-01-01"
+# เลือกให้ช่วงข้อมูลร่วมของทั้ง 3 สินทรัพย์ (หลัง reindex/dropna ใน compute_stats.py)
+# ลงตัวที่ 240 เดือนเต็มพอดี = 20.0 ปี ซึ่งเป็นตัวเลขที่หน้าแรกของเว็บอ้างถึงตรง ๆ
+# ("ข้อมูลจริงย้อนหลัง 20 ปี") รันซ้ำแบบไม่ใส่ --start จึงยังได้กรอบเวลาเดิมนี้เสมอ
+DEFAULT_START = "2006-07-16"
 
 FRED_CSV_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) gold-case-study/1.0"
@@ -54,18 +61,29 @@ FX_CANDIDATES = [
     ("THB=X", "อัตราแลกเปลี่ยน USD/THB (Yahoo Finance, ticker สำรอง)"),
 ]
 
-# หมายเหตุสำคัญ: ดัชนี SET โดยตรง (^SET.BK) บน Yahoo Finance คืนค่าเฉพาะราคาล่าสุด
-# ไม่มี time series ย้อนหลัง จึงใช้ ETF ที่จดทะเบียนในตลาดหลักทรัพย์ไทยแทน
-# TDEX.BK = ThaiDEX SET50 ETF ซื้อขายเป็นเงินบาท และ auto_adjust จะปรับเงินปันผลให้แล้ว
+# หุ้นสหรัฐฯ: ใช้ ETF ที่อ้างอิง S&P 500 ไม่ใช่ตัวดัชนี (^GSPC) โดยตรง
+# เพราะดัชนี S&P 500 เป็นดัชนีราคาล้วน ไม่รวมเงินปันผล ซึ่งคิดเป็นผลตอบแทนราว 2%/ปี
+# ETF กับ auto_adjust=True ให้ผลตอบแทนรวม (total return) ที่นักลงทุนได้รับจริง
+# ^GSPC อยู่ท้ายสุดในฐานะทางเลือกสุดท้าย และถูกทำเครื่องหมายว่าเป็น proxy ถ้าได้ใช้จริง
 EQUITY_CANDIDATES = [
-    ("TDEX.BK", "ThaiDEX SET50 ETF (TDEX) — กองทุน ETF อ้างอิงดัชนี SET50 ซื้อขายในตลาดหลักทรัพย์ไทย สกุลเงินบาท ปรับเงินปันผลแล้ว"),
-    ("BSET50.BK", "Bualuang SET50 ETF — สกุลเงินบาท"),
-    ("THD", "iShares MSCI Thailand ETF (NYSE Arca) — สกุลเงิน USD ต้องแปลงเป็นบาท"),
+    ("SPY", "SPDR S&P 500 ETF Trust (NYSE Arca) — ETF อ้างอิงดัชนี S&P 500 สกุลเงิน USD ปรับเงินปันผลแล้ว"),
+    ("IVV", "iShares Core S&P 500 ETF (NYSE Arca) — สกุลเงิน USD ปรับเงินปันผลแล้ว"),
+    ("VOO", "Vanguard S&P 500 ETF (NYSE Arca) — สกุลเงิน USD ปรับเงินปันผลแล้ว"),
+    ("^GSPC", "ดัชนี S&P 500 โดยตรง — เป็นดัชนีราคาล้วน ไม่รวมเงินปันผล"),
 ]
 
-# ตราสารหนี้: พยายามหาแหล่งข้อมูลไทยก่อน ถ้าไม่ได้จึงใช้ US 10Y เป็น proxy
+# ETF ทั้งสามตัวข้างต้นเป็นตัวแทนที่ตรงของ S&P 500 (ต่างกันแค่ค่าบริหารจัดการหลักร้อยละ 0.0x)
+# มีแต่ ^GSPC ที่ต้องนับเป็น proxy เพราะขาดเงินปันผลไปทั้งก้อน
+EQUITY_TOTAL_RETURN_TICKERS = {"SPY", "IVV", "VOO"}
+
+# พันธบัตรรัฐบาลสหรัฐฯ อายุ 10 ปี — เป็นสินทรัพย์ที่ต้องการโดยตรง ไม่ใช่ตัวแทนของอย่างอื่น
 BOND_FRED_SERIES = "DGS10"
-BOND_FRED_DESC = "US 10-Year Treasury Constant Maturity Rate (FRED: DGS10) — ใช้เป็น proxy แทนพันธบัตรรัฐบาลไทยอายุ 10 ปี"
+BOND_FRED_DESC = "US 10-Year Treasury Constant Maturity Rate (FRED: DGS10) — อัตราผลตอบแทนพันธบัตรรัฐบาลสหรัฐฯ อายุ 10 ปี"
+
+# ตั๋วเงินคลังสหรัฐฯ อายุ 3 เดือน ใช้เป็นอัตราผลตอบแทนปราศจากความเสี่ยงฝั่ง USD
+# (ของเดิมเป็นค่าคงที่สมมติ เพราะพอร์ตอยู่ในสกุลบาทอย่างเดียว)
+RISK_FREE_FRED_SERIES = "DGS3MO"
+RISK_FREE_FRED_DESC = "US 3-Month Treasury Bill Secondary Market Rate (FRED: DGS3MO) — ใช้เป็นอัตราผลตอบแทนปราศจากความเสี่ยงสกุล USD"
 
 
 def _log(msg: str) -> None:
@@ -132,9 +150,9 @@ def fetch_first_available(
     )
 
 
-def fetch_fred_series(series_id: str, start: str) -> pd.Series:
+def fetch_fred_series(series_id: str, start: str, label: str) -> pd.Series:
     """ดึง time series จาก FRED ผ่าน CSV endpoint สาธารณะ (ไม่ต้องใช้ API key)."""
-    _log(f"  · ตราสารหนี้ (FRED {series_id})")
+    _log(f"  · {label} (FRED {series_id})")
     url = FRED_CSV_URL.format(series_id=series_id)
     last_exc: Exception | None = None
 
@@ -219,36 +237,61 @@ def main() -> int:
         "end": str(fx.index[-1].date()),
     }
 
-    # 2) หุ้นไทย
+    # 2) หุ้นสหรัฐฯ (S&P 500)
     eq_ticker, eq_desc, equity = fetch_first_available(
-        EQUITY_CANDIDATES, args.start, "หุ้นไทย (ดัชนี SET / ETF อ้างอิง SET)"
+        EQUITY_CANDIDATES, args.start, "หุ้นสหรัฐฯ (ETF อ้างอิง S&P 500)"
     )
-    write_csv(equity, "equity_th.csv", "close")
+    write_csv(equity, "equity_us.csv", "close_usd")
+    is_total_return = eq_ticker in EQUITY_TOTAL_RETURN_TICKERS
     sources["equity"] = {
         "ticker": eq_ticker,
         "description": eq_desc,
         "provider": "Yahoo Finance",
-        "currency": "USD" if eq_ticker == "THD" else "THB",
+        "currency": "USD",
+        "isProxy": not is_total_return,
         "rows": int(len(equity)),
         "start": str(equity.index[0].date()),
         "end": str(equity.index[-1].date()),
     }
+    if not is_total_return:
+        sources["equity"]["proxyNote"] = (
+            "ดึง ETF อ้างอิง S&P 500 ที่ปรับเงินปันผลแล้วไม่สำเร็จ จึงใช้ดัชนี S&P 500 โดยตรง "
+            "ซึ่งเป็นดัชนีราคาล้วน ผลตอบแทนที่ได้จะต่ำกว่าความเป็นจริงประมาณ 2% ต่อปี"
+        )
 
-    # 3) ตราสารหนี้ (US 10Y เป็น proxy)
-    bond_yield = fetch_fred_series(BOND_FRED_SERIES, args.start)
+    # 3) พันธบัตรรัฐบาลสหรัฐฯ อายุ 10 ปี
+    bond_yield = fetch_fred_series(BOND_FRED_SERIES, args.start, "พันธบัตรสหรัฐฯ 10 ปี")
     write_csv(bond_yield, "bond_yield.csv", "yield_pct")
     sources["bond_yield"] = {
         "ticker": BOND_FRED_SERIES,
         "description": BOND_FRED_DESC,
         "provider": "FRED (Federal Reserve Bank of St. Louis)",
+        "currency": "USD",
+        # ตัวอัตราผลตอบแทนเป็นข้อมูลจริงของสินทรัพย์ที่ต้องการตรง ๆ ไม่ใช่ตัวแทนของอย่างอื่น
+        # แต่ "ดัชนีผลตอบแทนรวม" ที่ compute_stats.py สร้างต่อจากมันเป็นการจำลอง
+        # จึงยังต้องกำกับว่าไม่ใช่ผลตอบแทนของกองทุนพันธบัตรที่ซื้อขายได้จริง
         "isProxy": True,
         "proxyNote": (
-            "ไม่มี API สาธารณะที่เข้าถึงได้ฟรีสำหรับอัตราผลตอบแทนพันธบัตรรัฐบาลไทยอายุ 10 ปี "
-            "(ThaiBMA และ Bank of Thailand ต้องลงทะเบียน/ใช้ API key) จึงใช้พันธบัตรรัฐบาลสหรัฐฯ อายุ 10 ปีแทน"
+            "อัตราผลตอบแทนที่ดึงมาเป็นข้อมูลจริงของพันธบัตรรัฐบาลสหรัฐฯ อายุ 10 ปี "
+            "แต่ดัชนีผลตอบแทนรวมที่ใช้ในเคสนี้สร้างขึ้นจากอัตราผลตอบแทนด้วยสูตร duration/convexity "
+            "ไม่ใช่มูลค่าหน่วยลงทุนจริงของกองทุนพันธบัตร จึงไม่รวมค่าธรรมเนียมและส่วนต่างราคาซื้อขาย"
         ),
         "rows": int(len(bond_yield)),
         "start": str(bond_yield.index[0].date()),
         "end": str(bond_yield.index[-1].date()),
+    }
+
+    # 4) อัตราผลตอบแทนปราศจากความเสี่ยงสกุล USD (ตั๋วเงินคลัง 3 เดือน)
+    risk_free = fetch_fred_series(RISK_FREE_FRED_SERIES, args.start, "ตั๋วเงินคลังสหรัฐฯ 3 เดือน")
+    write_csv(risk_free, "risk_free_usd.csv", "yield_pct")
+    sources["risk_free_usd"] = {
+        "ticker": RISK_FREE_FRED_SERIES,
+        "description": RISK_FREE_FRED_DESC,
+        "provider": "FRED (Federal Reserve Bank of St. Louis)",
+        "currency": "USD",
+        "rows": int(len(risk_free)),
+        "start": str(risk_free.index[0].date()),
+        "end": str(risk_free.index[-1].date()),
     }
 
     manifest = {

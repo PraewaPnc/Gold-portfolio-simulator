@@ -1,4 +1,4 @@
-import { ASSETS, type AssetKey, type AssetStats } from "./types";
+import { ASSETS, type AssetKey, type CurrencyStats } from "./types";
 
 /**
  * น้ำหนักของเงินทุนทั้งก้อน — รวมกันได้ 1 เสมอ
@@ -25,8 +25,12 @@ export interface MarketModel {
 /**
  * สร้าง market model จากสถิติที่คำนวณจากข้อมูลย้อนหลังจริง (asset-stats.json)
  * แทนที่จะใช้ตัวเลขสมมติฐานแบบต้นแบบ
+ *
+ * รับสถิติของ "ฐานสกุลเงินเดียว" เพราะ mean/volatility/correlation ต่างกัน
+ * ระหว่างฐาน USD กับฐานบาท การจำลองจึงต้องผูกกับสกุลที่ผู้ใช้เลือกทั้งชุด
+ * ไม่ใช่แปลงมูลค่าปลายทางทีหลัง
  */
-export function buildMarketModel(stats: AssetStats): MarketModel {
+export function buildMarketModel(stats: CurrencyStats): MarketModel {
   const mu = {} as Record<AssetKey, number>;
   const sigma = {} as Record<AssetKey, number>;
   for (const a of ASSETS) {
@@ -37,7 +41,7 @@ export function buildMarketModel(stats: AssetStats): MarketModel {
 
   const cov = ASSETS.map((i) => ASSETS.map((j) => sigma[i] * sigma[j] * corr[i][j]));
 
-  return { mu, sigma, corr, cov, chol: cholesky(cov), riskFree: stats.meta.riskFreeRate };
+  return { mu, sigma, corr, cov, chol: cholesky(cov), riskFree: stats.riskFreeRate };
 }
 
 /** Cholesky decomposition ของเมทริกซ์สมมาตร n x n (คืน lower-triangular L โดย L·Lᵀ = A) */
@@ -185,16 +189,25 @@ export interface Persona {
   blurb: string;
 }
 
+/**
+ * เรียงตามระยะเวลาลงทุนจากยาวไปสั้น (25 → 12 → 10 → 4 ปี)
+ *
+ * ระยะเวลาคือตัวแปรที่อธิบายความต่างระหว่าง persona ได้มากที่สุด การไล่ตามลำดับนี้
+ * จึงทำให้เห็นแนวโน้มของสำรองเงินสดและผลลัพธ์ปลายทางเป็นเส้นเดียวกัน
+ * ทั้งบนแถวปุ่มและในตารางเปรียบเทียบ ซึ่งอ่านจากอาร์เรย์ชุดเดียวกัน
+ *
+ * id ไม่ได้เรียงตามลำดับที่แสดง เพราะเป็นคีย์ภายในที่ผูกกับ persona แต่ละตัวไว้แล้ว
+ */
 export const PERSONAS: Persona[] = [
   {
-    id: "A",
-    label: "ใกล้เกษียณ",
-    age: 57,
-    ageRange: "55–60 ปี",
-    horizon: 4,
-    gold: 0.2,
-    cash: 0.15,
-    blurb: "เหลือเวลาลงทุนสั้น ต้องการรักษาเงินต้นเป็นหลัก",
+    id: "C",
+    label: "วัยเริ่มทำงาน",
+    age: 27,
+    ageRange: "25–32 ปี",
+    horizon: 25,
+    gold: 0.08,
+    cash: 0.05,
+    blurb: "ระยะเวลายาว รับความผันผวนได้สูง เน้นการเติบโต",
   },
   {
     id: "B",
@@ -207,16 +220,6 @@ export const PERSONAS: Persona[] = [
     blurb: "สมดุลระหว่างการเติบโตและการป้องกันความเสี่ยง",
   },
   {
-    id: "C",
-    label: "วัยเริ่มทำงาน",
-    age: 27,
-    ageRange: "25–32 ปี",
-    horizon: 25,
-    gold: 0.08,
-    cash: 0.05,
-    blurb: "ระยะเวลายาว รับความผันผวนได้สูง เน้นการเติบโต",
-  },
-  {
     id: "D",
     label: "เน้นป้องกันความเสี่ยง",
     age: 45,
@@ -225,6 +228,16 @@ export const PERSONAS: Persona[] = [
     gold: 0.28,
     cash: 0.1,
     blurb: "กังวลเงินเฟ้อและวิกฤต จึงถือทองคำในสัดส่วนสูง",
+  },
+  {
+    id: "A",
+    label: "ใกล้เกษียณ",
+    age: 57,
+    ageRange: "55–60 ปี",
+    horizon: 4,
+    gold: 0.2,
+    cash: 0.15,
+    blurb: "เหลือเวลาลงทุนสั้น ต้องการรักษาเงินต้นเป็นหลัก",
   },
 ];
 

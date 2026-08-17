@@ -14,13 +14,15 @@ import {
   YAxis,
 } from "recharts";
 
+import { toCurrencySeries, unitLabel } from "@/lib/currency";
+import { useCurrency } from "@/lib/currency-context";
 import { formatThaiDate, formatThaiMonthYear } from "@/lib/data";
 import type { PricePoint } from "@/lib/types";
 
 const SERIES = [
-  { key: "gold", label: "ทองคำ (บาท)", color: "#C9A227" },
-  { key: "equity", label: "หุ้นไทย (SET50 TR)", color: "#5B87A6" },
-  { key: "bond", label: "ตราสารหนี้ (TR)", color: "#4F8B76" },
+  { key: "gold", label: "ทองคำ", color: "#C9A227" },
+  { key: "equity", label: "หุ้นสหรัฐฯ (S&P 500 TR)", color: "#5B87A6" },
+  { key: "bond", label: "พันธบัตรสหรัฐฯ (TR)", color: "#4F8B76" },
 ] as const;
 
 const RANGES = [
@@ -37,7 +39,7 @@ type RangeKey = (typeof RANGES)[number]["key"];
 const CRISIS_FILL = "#B25A4A";
 
 /**
- * ช่วงวิกฤตเศรษฐกิจโลกครั้งใหญ่ที่อยู่ในกรอบข้อมูล (2551 เป็นต้นมา)
+ * ช่วงวิกฤตเศรษฐกิจโลกครั้งใหญ่ที่อยู่ในกรอบข้อมูล (2549 เป็นต้นมา)
  * ใช้ช่วงที่ตลาดปรับตัวรุนแรงจริง ไม่ใช่ช่วงของวิกฤตเชิงเศรษฐกิจทั้งหมด
  * เพื่อให้แถบตรงกับสิ่งที่เห็นบนกราฟราคา
  */
@@ -79,19 +81,24 @@ interface Props {
 
 export function PriceChart({ series }: Props) {
   const [range, setRange] = useState<RangeKey>("all");
+  const { currency } = useCurrency();
 
   /**
    * ตัดช่วงเวลาแล้ว normalize ใหม่ให้จุดแรกของช่วงที่เลือกเป็น 100
    * เพื่อให้เปรียบเทียบ "ทิศทางในช่วงนั้น" ได้ตรง ไม่ใช่แค่ซูมกราฟเดิม
+   *
+   * แปลงสกุลก่อนตัดช่วง เพราะการ normalize รอบสุดท้ายต้องอิงจุดแรกของช่วงที่เลือก
+   * ในสกุลนั้น ๆ (ตัวคูณ fx ที่ต่างกันคนละช่วงเวลาให้เส้นคนละรูป)
    */
   const data = useMemo(() => {
     const cfg = RANGES.find((r) => r.key === range)!;
-    let sliced = series;
+    const converted = toCurrencySeries(series, currency);
+    let sliced = converted;
 
     if (cfg.months !== null) {
-      const cutoff = new Date(series[series.length - 1].date);
+      const cutoff = new Date(converted[converted.length - 1].date);
       cutoff.setMonth(cutoff.getMonth() - cfg.months);
-      const filtered = series.filter((p) => new Date(p.date) >= cutoff);
+      const filtered = converted.filter((p) => new Date(p.date) >= cutoff);
       if (filtered.length > 1) sliced = filtered;
     }
 
@@ -102,7 +109,7 @@ export function PriceChart({ series }: Props) {
       equity: (p.equity / base.equity) * 100,
       bond: (p.bond / base.bond) * 100,
     }));
-  }, [series, range]);
+  }, [series, range, currency]);
 
   // ช่วงสั้นแสดงวันที่ระดับวัน ส่วนช่วงยาวแสดงแค่เดือน/ปี ไม่ให้แกนแน่นเกินไป
   const formatAxisDate = range === "6m" || range === "1y" ? formatThaiDate : formatThaiMonthYear;
@@ -148,7 +155,9 @@ export function PriceChart({ series }: Props) {
     <div>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-medium text-ink">ราคาย้อนหลังเปรียบเทียบ (ฐาน 100)</h3>
+          <h3 className="text-sm font-medium text-ink">
+            ราคาย้อนหลังเปรียบเทียบ (ฐาน 100, สกุล{unitLabel(currency)})
+          </h3>
           <p className="mt-0.5 text-xs text-ink-faint">
             ข้อมูลรายสัปดาห์ · ปรับฐานให้จุดเริ่มต้นของช่วงที่เลือกเท่ากับ 100
             เพื่อเทียบทิศทางในกราฟเดียว ({data.length} จุดข้อมูล)

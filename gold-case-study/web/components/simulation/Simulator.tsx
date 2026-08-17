@@ -1,7 +1,7 @@
 "use client";
 
 import { Coins, Maximize2, TrendingUp, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Area,
   Bar,
@@ -17,8 +17,10 @@ import {
 } from "recharts";
 
 import { InfoHint } from "@/components/InfoHint";
+import { convertAmount, currencySymbol, defaultCapital, unitLabel } from "@/lib/currency";
+import { useCurrency } from "@/lib/currency-context";
 import { assetStats } from "@/lib/data";
-import { pct, thb, thbCompact } from "@/lib/format";
+import { money, moneyCompact, pct } from "@/lib/format";
 import {
   buildMarketModel,
   equityShareForGold,
@@ -44,12 +46,6 @@ const CASH = "#8E8778";
 
 const N_SIMS = 1200;
 const N_SIMS_PERSONA = 500;
-
-/**
- * market model สร้างครั้งเดียวจาก asset-stats.json (ข้อมูลย้อนหลังจริง)
- * ไม่ขึ้นกับ state ใด ๆ จึงวางไว้นอก component ได้
- */
-const MODEL = buildMarketModel(assetStats);
 
 /** สไลเดอร์ทองคำสูงสุด 40% — ใช้เป็นขอบบนของช่วงระดับที่เสี่ยงต่ำสุดตอนแสดงผล */
 const MAX_GOLD = 0.4;
@@ -90,6 +86,8 @@ function PersonaTable({
   rows: PersonaRow[];
   activePersona: string | null;
 }) {
+  // มูลค่าปลายทางสองคอลัมน์สุดท้ายเป็นจำนวนเงิน จึงต้องรู้สกุลที่เลือกอยู่
+  const { currency } = useCurrency();
   return (
     <table className="data-table min-w-[740px]">
       <thead>
@@ -100,8 +98,8 @@ function PersonaTable({
           <th className="text-right">เงินสด</th>
           <th className="text-right">ผลตอบแทน/ปี</th>
           <th className="text-right">ความผันผวน</th>
-          <th className="text-right">มัธยฐานปลายทาง</th>
-          <th className="text-right">กรณีเลวร้าย (5%)</th>
+          <th className="text-right">มัธยฐานปลายทาง ({unitLabel(currency)})</th>
+          <th className="text-right">กรณีเลวร้าย 5% ({unitLabel(currency)})</th>
         </tr>
       </thead>
       <tbody>
@@ -115,8 +113,8 @@ function PersonaTable({
             <td className="strong text-right text-ink-dim">{pct(p.cash, 0)}</td>
             <td className="strong text-right">{pct(p.s.ret)}</td>
             <td className="strong text-right">{pct(p.s.vol)}</td>
-            <td className="strong text-right">{thb(p.median)}</td>
-            <td className="strong text-right text-ink-dim">{thb(p.p5)}</td>
+            <td className="strong text-right">{money(p.median)}</td>
+            <td className="strong text-right text-ink-dim">{money(p.p5)}</td>
           </tr>
         ))}
       </tbody>
@@ -125,12 +123,31 @@ function PersonaTable({
 }
 
 export function Simulator() {
-  const [capital, setCapital] = useState(1_000_000);
+  const { currency, stats: marketStats } = useCurrency();
+  const [capital, setCapital] = useState(() => defaultCapital(assetStats.meta.defaultCurrency));
   const [horizon, setHorizon] = useState(12);
   const [goldW, setGoldW] = useState(PROFILES.moderate.gold);
   const [cashW, setCashW] = useState(0.1);
   const [activePersona, setActivePersona] = useState<string | null>(null);
   const [tableOpen, setTableOpen] = useState(false);
+
+  /**
+   * market model ผูกกับฐานสกุลเงิน — mean, volatility, correlation และอัตราปราศจากความเสี่ยง
+   * เป็นคนละชุดระหว่างฐาน USD กับฐานบาท จึงสร้างใหม่ทุกครั้งที่สลับสกุล
+   */
+  const model = useMemo(() => buildMarketModel(marketStats), [marketStats]);
+
+  /**
+   * เงินก้อนที่ผู้ใช้ตั้งไว้ต้องมีมูลค่าเท่าเดิมเมื่อสลับสกุล
+   * ถ้าปล่อยตัวเลขค้างไว้ 1,000,000 จะกลายเป็นเงินคนละขนาดกันทันทีที่เปลี่ยนเป็นดอลลาร์
+   */
+  const prevCurrency = useRef(currency);
+  useEffect(() => {
+    if (prevCurrency.current === currency) return;
+    const from = prevCurrency.current;
+    prevCurrency.current = currency;
+    setCapital((c) => convertAmount(c, from, currency));
+  }, [currency]);
 
   /** เปิด popup แล้วต้องปิดด้วย Escape ได้ และไม่ให้หน้าด้านหลังเลื่อนตาม */
   useEffect(() => {
@@ -148,18 +165,21 @@ export function Simulator() {
   }, [tableOpen]);
 
   const weights = useMemo(() => weightsFromGold(goldW, cashW), [goldW, cashW]);
-  const stats = useMemo(() => portfolioStats(weights, MODEL), [weights]);
+  const stats = useMemo(() => portfolioStats(weights, model), [weights, model]);
 
   /**
    * สถิติของ "ส่วนที่ลงทุน" ล้วน ๆ (ไม่รวมเงินสด)
    * ใช้กับข้อความระดับความเสี่ยง เพราะระดับความเสี่ยงนิยามจากสัดส่วนทองคำในพอร์ตลงทุน
    * ถ้าเอาความผันผวนที่เจือจางด้วยเงินสดมาแสดงตรงนั้น ป้ายกำกับกับตัวเลขจะขัดกันเอง
    */
-  const investedStats = useMemo(() => portfolioStats(weightsFromGold(goldW), MODEL), [goldW]);
+  const investedStats = useMemo(
+    () => portfolioStats(weightsFromGold(goldW), model),
+    [goldW, model],
+  );
 
   const sim = useMemo(
-    () => runMonteCarlo(weights, horizon, capital, MODEL, N_SIMS),
-    [weights, horizon, capital],
+    () => runMonteCarlo(weights, horizon, capital, model, N_SIMS),
+    [weights, horizon, capital, model],
   );
 
   const histData = useMemo(() => histogram(sim.ending), [sim.ending]);
@@ -190,12 +210,12 @@ export function Simulator() {
     () =>
       PERSONAS.map((p) => {
         const w = weightsFromGold(p.gold, p.cash);
-        const s = portfolioStats(w, MODEL);
-        const pSim = runMonteCarlo(w, p.horizon, capital, MODEL, N_SIMS_PERSONA);
+        const s = portfolioStats(w, model);
+        const pSim = runMonteCarlo(w, p.horizon, capital, model, N_SIMS_PERSONA);
         const end = pSim.fan[pSim.fan.length - 1];
         return { ...p, w, s, median: end.p50, p5: end.p5, probLoss: pSim.probLoss };
       }),
-    [capital],
+    [capital, model],
   );
 
   const activeP = PERSONAS.find((p) => p.id === activePersona) ?? null;
@@ -252,7 +272,7 @@ export function Simulator() {
 
           <div>
             <label htmlFor="capital" className="label-caps mb-2 block">
-              เงินลงทุนทั้งหมด (บาท)
+              เงินลงทุนทั้งหมด ({unitLabel(currency)})
             </label>
             <input
               id="capital"
@@ -311,7 +331,7 @@ export function Simulator() {
               ความผันผวนเฉพาะส่วนที่ลงทุน {pct(investedStats.vol)}
             </p>
             <p className="mt-1 font-mono text-[11px] leading-relaxed text-ink-faint">
-              แบ่งส่วนลงทุนที่ไม่ใช่ทองคำเป็น หุ้น {pct(equityShare, 0)} / ตราสารหนี้{" "}
+              แบ่งส่วนลงทุนที่ไม่ใช่ทองคำเป็น หุ้นสหรัฐฯ {pct(equityShare, 0)} / พันธบัตร{" "}
               {pct(1 - equityShare, 0)}
             </p>
           </div>
@@ -337,7 +357,8 @@ export function Simulator() {
               className="slider"
             />
             <p className="mt-1 font-mono text-[11px] leading-relaxed text-ink-faint">
-              กันไว้ {thb(capital * cashW)} บาท · เหลือลงทุน {thb(capital * (1 - cashW))} บาท
+              กันไว้ {money(capital * cashW)} {unitLabel(currency)} · เหลือลงทุน{" "}
+              {money(capital * (1 - cashW))} {unitLabel(currency)}
             </p>
           </div>
 
@@ -379,7 +400,7 @@ export function Simulator() {
           <p className="border-t border-line pt-3.5 text-[11.5px] leading-relaxed text-ink-faint">
             ลำดับการคิดเหมือนการวางแผนจริง — กันสำรองเงินสดออกก่อน แล้วค่อยจัดสรรส่วนที่เหลือ
             ในส่วนที่ลงทุน สัดส่วนทองคำเป็นตัวควบคุมเพียงตัวเดียว ทองยิ่งมาก
-            ส่วนที่เหลือยิ่งเอนไปทางตราสารหนี้ ระดับความเสี่ยงจึงอ่านจากสไลเดอร์ทองโดยตรง
+            ส่วนที่เหลือยิ่งเอนไปทางพันธบัตร ระดับความเสี่ยงจึงอ่านจากสไลเดอร์ทองโดยตรง
             ลากข้ามเส้นแบ่งเมื่อไร ปุ่มด้านบนเลื่อนตามทันที และการกดปุ่มก็คือทางลัด
             ไปยังหมุดของระดับนั้น
           </p>
@@ -412,8 +433,8 @@ export function Simulator() {
             {(
               [
                 { label: "ทองคำ", w: weights.gold, color: GOLD },
-                { label: "หุ้นไทย", w: weights.equity, color: EQUITY },
-                { label: "ตราสารหนี้", w: weights.bond, color: BOND },
+                { label: marketStats.assets.equity.label, w: weights.equity, color: EQUITY },
+                { label: marketStats.assets.bond.label, w: weights.bond, color: BOND },
                 { label: "สำรองเงินสด", w: weights.cash, color: CASH },
               ] as const
             ).map((item) => (
@@ -423,14 +444,16 @@ export function Simulator() {
                   style={{ background: item.color }}
                   aria-hidden
                 />
-                {item.label} · <span className="font-mono tabular">{thb(capital * item.w)}</span> บาท
+                {item.label} ·{" "}
+                <span className="font-mono tabular">{money(capital * item.w)}</span>{" "}
+                {unitLabel(currency)}
               </span>
             ))}
           </div>
 
           <p className="mb-6 text-[11.5px] leading-relaxed text-ink-faint">
             สำรองเงินสดไม่ได้ลงทุน แต่คิดผลตอบแทนที่อัตราปราศจากความเสี่ยง{" "}
-            {pct(assetStats.meta.riskFreeRate)} ต่อปี โดยไม่มีความผันผวน และไม่ถูกโยกกลับเข้าตลาด
+            {pct(marketStats.riskFreeRate)} ต่อปี โดยไม่มีความผันผวน และไม่ถูกโยกกลับเข้าตลาด
             ตลอดช่วงจำลอง — ตัวเลขสถิติทั้งสี่ช่องด้านล่างเป็นของเงินทุนทั้งก้อนรวมเงินสดแล้ว
           </p>
 
@@ -442,13 +465,17 @@ export function Simulator() {
             */}
             {(
               [
-                { label: "เงินลงทุนในทองคำ (บาท)", value: thb(capital * weights.gold), accent: true },
+                {
+                  label: `เงินลงทุนในทองคำ (${unitLabel(currency)})`,
+                  value: money(capital * weights.gold),
+                  accent: true,
+                },
                 {
                   label: "ผลตอบแทนคาดหวัง / ปี",
                   value: pct(stats.ret),
                   info:
                     "ค่าเฉลี่ยผลตอบแทนต่อปีของทั้งพอร์ต ถ่วงน้ำหนักตามสัดส่วนที่ถือ · " +
-                    `สูตร: Σ (น้ำหนัก × ผลตอบแทนเฉลี่ยของสินทรัพย์) + เงินสด × ${pct(assetStats.meta.riskFreeRate)}`,
+                    `สูตร: Σ (น้ำหนัก × ผลตอบแทนเฉลี่ยของสินทรัพย์) + เงินสด × ${pct(marketStats.riskFreeRate)}`,
                   infoAlign: "right",
                 },
                 {
@@ -465,7 +492,7 @@ export function Simulator() {
                   value: stats.sharpe.toFixed(2),
                   info:
                     "วัดผลตอบแทนเทียบกับความเสี่ยงที่รับ — ยิ่งสูงยิ่งคุ้ม · " +
-                    `สูตร: (ผลตอบแทน − ${pct(assetStats.meta.riskFreeRate)}) ÷ ความผันผวน · ` +
+                    `สูตร: (ผลตอบแทน − ${pct(marketStats.riskFreeRate)}) ÷ ความผันผวน · ` +
                     "เทียบระหว่างสัดส่วนการลงทุน",
                   infoAlign: "right",
                 },
@@ -504,21 +531,25 @@ export function Simulator() {
             <h3 className="flex items-center gap-2 text-sm font-medium text-ink">
               <TrendingUp size={15} className="text-gold" aria-hidden />
               การกระจายผลลัพธ์พอร์ตตลอด {sim.horizon} ปี
+              {/*
+                กันคนดูเข้าใจผิดว่าเส้นกลางคือเส้นทางที่จะเกิดขึ้นจริง
+                ซึ่งเป็นจุดที่ fan chart หลอกตาได้มากที่สุด
+              */}
+              <InfoHint
+                label="คำอธิบายเส้นทางตัวอย่างและแกนตั้งของกราฟ"
+                align="left"
+                text={
+                  `เส้นจาง ${SAMPLE_PATHS} เส้นคือเส้นทางจริงของ ${SAMPLE_PATHS} รอบแรก · ` +
+                  "เส้นกลางที่เรียบไม่ใช่เส้นทางของรอบใดรอบหนึ่ง แต่เป็นค่ามัธยฐานที่คำนวณใหม่ทุกปี " +
+                  "ความหยักของแต่ละรอบจึงหักล้างกันหมด · " +
+                  "แกนตั้งตรึงไว้กับแถบ 95th percentile เส้นที่วิ่งเกินกรอบจะถูกตัดที่ขอบบน"
+                }
+              />
             </h3>
             <p className="mb-3.5 mt-1 text-xs leading-relaxed text-ink-faint">
               จาก Monte Carlo simulation {N_SIMS.toLocaleString("th-TH")} รอบ — แถบอ่อนคือช่วง
               5th–95th percentile, แถบเข้มคือ 25th–75th, เส้นกลางคือค่ามัธยฐาน ·
               โอกาสที่มูลค่าปลายทางต่ำกว่าเงินลงทุนตั้งต้น {pct(sim.probLoss, 0)}
-            </p>
-            {/*
-              กันคนดูเข้าใจผิดว่าเส้นกลางคือเส้นทางที่จะเกิดขึ้นจริง
-              ซึ่งเป็นจุดที่ fan chart หลอกตาได้มากที่สุด
-            */}
-            <p className="mb-3.5 text-xs leading-relaxed text-ink-faint">
-              เส้นจาง {SAMPLE_PATHS} เส้นคือเส้นทางจริงของ {SAMPLE_PATHS} รอบแรก —
-              เส้นกลางที่เรียบไม่ใช่เส้นทางของรอบใดรอบหนึ่ง แต่เป็นค่ามัธยฐานที่คำนวณใหม่ทุกปี
-              ความหยักของแต่ละรอบจึงหักล้างกันหมด · แกนตั้งตรึงไว้กับแถบ 95th percentile
-              เส้นที่วิ่งเกินกรอบจะถูกตัดที่ขอบบน
             </p>
             <ResponsiveContainer width="100%" height={270}>
               <ComposedChart data={sim.fan} margin={{ top: 5, right: 10, left: 0, bottom: 4 }}>
@@ -534,7 +565,7 @@ export function Simulator() {
                   domain={[0, yScale.max]}
                   ticks={yScale.ticks}
                   allowDataOverflow
-                  tickFormatter={thbCompact}
+                  tickFormatter={(v: number) => `${currencySymbol(currency)}${moneyCompact(v)}`}
                   tick={{ fill: "#A79E8C", fontSize: 11 }}
                   tickLine={false}
                   axisLine={false}
@@ -548,9 +579,11 @@ export function Simulator() {
                     return (
                       <div className="rounded-lg border border-line bg-panel px-3 py-2.5 font-mono text-xs text-ink shadow-lg">
                         <div className="mb-1 text-ink-faint">ปีที่ {String(label)}</div>
-                        <div className="tabular">มัธยฐาน: {thb(d.p50)} บาท</div>
+                        <div className="tabular">
+                          มัธยฐาน: {money(d.p50)} {unitLabel(currency)}
+                        </div>
                         <div className="tabular text-ink-faint">
-                          ช่วง 5–95%: {thb(d.p5)} – {thb(d.p95)}
+                          ช่วง 5–95%: {money(d.p5)} – {money(d.p95)}
                         </div>
                       </div>
                     );
@@ -590,13 +623,14 @@ export function Simulator() {
                 มูลค่าพอร์ตปลายทาง
               </h3>
               <p className="mb-3 mt-1 text-xs text-ink-faint">
-                มัธยฐาน {thb(medianEnd)} บาท · กรณีเลวร้าย (5%) {thb(p5End)} บาท
+                มัธยฐาน {money(medianEnd)} {unitLabel(currency)} · กรณีเลวร้าย (5%){" "}
+                {money(p5End)} {unitLabel(currency)}
               </p>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={histData} margin={{ top: 5, right: 16, left: 16, bottom: 0 }}>
                   <XAxis
                     dataKey="mid"
-                    tickFormatter={thbCompact}
+                    tickFormatter={(v: number) => `${currencySymbol(currency)}${moneyCompact(v)}`}
                     tick={{ fill: "#A79E8C", fontSize: 10 }}
                     tickLine={false}
                     axisLine={{ stroke: "#3A3427" }}
@@ -610,7 +644,9 @@ export function Simulator() {
                       const d = payload[0].payload as { mid: number; count: number };
                       return (
                         <div className="rounded-lg border border-line bg-panel px-3 py-2 font-mono text-xs text-ink shadow-lg">
-                          <div className="tabular">~{thb(d.mid)} บาท</div>
+                          <div className="tabular">
+                            ~{money(d.mid)} {unitLabel(currency)}
+                          </div>
                           <div className="tabular text-ink-faint">
                             {d.count} / {N_SIMS.toLocaleString("th-TH")} รอบ
                           </div>
@@ -641,7 +677,8 @@ export function Simulator() {
               </button>
             </div>
             <p className="mb-3 mt-1 text-xs text-ink-faint">
-              ผลลัพธ์เมื่อแต่ละ persona เริ่มด้วยเงิน {thb(capital)} บาท ตามที่ตั้งไว้ด้านซ้าย
+              ผลลัพธ์เมื่อแต่ละ persona เริ่มด้วยเงิน {money(capital)} {unitLabel(currency)}{" "}
+              ตามที่ตั้งไว้ด้านซ้าย
               (simulation {N_SIMS_PERSONA} รอบต่อ persona) · คอลัมน์ทองคำเป็นสัดส่วนของส่วนที่ลงทุน
               ส่วนเงินสดเป็นสัดส่วนของเงินทั้งก้อน
             </p>
@@ -672,7 +709,8 @@ export function Simulator() {
               <div>
                 <h3 className="text-sm font-medium text-ink">เปรียบเทียบ 4 Persona</h3>
                 <p className="mt-1 text-xs leading-relaxed text-ink-faint">
-                  ผลลัพธ์เมื่อแต่ละ persona เริ่มด้วยเงิน {thb(capital)} บาท (simulation{" "}
+                  ผลลัพธ์เมื่อแต่ละ persona เริ่มด้วยเงิน {money(capital)} {unitLabel(currency)}{" "}
+                  (simulation{" "}
                   {N_SIMS_PERSONA} รอบต่อ persona) · คอลัมน์ทองคำเป็นสัดส่วนของส่วนที่ลงทุน
                   ส่วนเงินสดเป็นสัดส่วนของเงินทั้งก้อน
                 </p>

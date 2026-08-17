@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarClock, TrendingUp } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Area,
   CartesianGrid,
@@ -15,9 +15,16 @@ import {
 } from "recharts";
 
 import { InfoHint } from "@/components/InfoHint";
-import { dataRange, formatThaiMonthYear, priceHistory } from "@/lib/data";
+import {
+  convertAmount,
+  currencySymbol,
+  toCurrencyMonthly,
+  unitLabel,
+} from "@/lib/currency";
+import { useCurrency } from "@/lib/currency-context";
+import { assetStats, dataRange, formatThaiMonthYear, priceHistory } from "@/lib/data";
 import { dcaWindow, maxDcaYears, PRICE_OF, runDca, type DcaAssetKey } from "@/lib/dca";
-import { dec2, pct, pctSigned, thb, thbCompact } from "@/lib/format";
+import { dec2, money, moneyCompact, pct, pctSigned, price } from "@/lib/format";
 
 const GOLD = "#C9A227";
 const GOLD_LIGHT = "#E8C766";
@@ -25,20 +32,47 @@ const INVESTED = "#8E8778";
 const DANGER = "#B25A4A";
 
 const MONTHLY = priceHistory.monthly;
+
 const MAX_YEARS = maxDcaYears(MONTHLY, dataRange.end);
 
 const COMPARE: { key: DcaAssetKey; label: string; color: string }[] = [
   { key: "gold", label: "ทองคำ", color: GOLD },
-  { key: "equity", label: "หุ้นไทย", color: "#5B87A6" },
-  { key: "bond", label: "ตราสารหนี้", color: "#4F8B76" },
+  { key: "equity", label: "หุ้นสหรัฐฯ", color: "#5B87A6" },
+  { key: "bond", label: "พันธบัตรสหรัฐฯ", color: "#4F8B76" },
 ];
 
+/** เงินตั้งต้นของหน้านี้กำหนดเป็นเงินบาท แล้วแปลงตามสกุลที่เลือก */
+const DEFAULT_INITIAL_THB = 100_000;
+const DEFAULT_MONTHLY_THB = 5_000;
+
 export function DcaSimulator() {
-  const [initial, setInitial] = useState(100_000);
-  const [monthly, setMonthly] = useState(5_000);
+  const { currency } = useCurrency();
+  // ค่าตั้งต้นต้องอยู่ในสกุลที่ render ครั้งแรกใช้ ไม่งั้นตัวเลขบาทจะไปโผล่ในหน้าที่คิดเป็นดอลลาร์
+  const [initial, setInitial] = useState(() =>
+    convertAmount(DEFAULT_INITIAL_THB, "thb", assetStats.meta.defaultCurrency),
+  );
+  const [monthly, setMonthly] = useState(() =>
+    convertAmount(DEFAULT_MONTHLY_THB, "thb", assetStats.meta.defaultCurrency),
+  );
   const [years, setYears] = useState(10);
 
-  const win = useMemo(() => dcaWindow(MONTHLY, years, dataRange.end), [years]);
+  /**
+   * แผนการลงทุนที่ผู้ใช้ตั้งไว้ต้องมีมูลค่าเท่าเดิมเมื่อสลับสกุล
+   * ไม่งั้น "5,000 ต่อเดือน" จะกลายเป็นแผนคนละขนาดกันทันทีที่เปลี่ยนเป็นดอลลาร์
+   */
+  const prevCurrency = useRef(currency);
+  useEffect(() => {
+    if (prevCurrency.current === currency) return;
+    const from = prevCurrency.current;
+    prevCurrency.current = currency;
+    setInitial((v) => convertAmount(v, from, currency));
+    setMonthly((v) => convertAmount(v, from, currency));
+  }, [currency]);
+
+  /** แปลงราคาทุกงวดเป็นสกุลที่เลือกก่อน การคำนวณ DCA ที่เหลือจึงไม่ต้องรู้เรื่องสกุลเงิน */
+  const rows = useMemo(() => toCurrencyMonthly(MONTHLY, currency), [currency]);
+
+  const win = useMemo(() => dcaWindow(rows, years, dataRange.end), [rows, years]);
   const input = useMemo(() => ({ initial, monthly }), [initial, monthly]);
 
   const result = useMemo(() => runDca(win, PRICE_OF.gold, input), [win, input]);
@@ -63,12 +97,12 @@ export function DcaSimulator() {
         <aside className="flex flex-col gap-5 border-b border-line p-5 lg:border-b-0 lg:border-r">
           <div>
             <label htmlFor="dca-initial" className="label-caps mb-2 block">
-              เงินเริ่มต้น (บาท)
+              เงินเริ่มต้น ({unitLabel(currency)})
             </label>
             <input
               id="dca-initial"
               type="number"
-              step={10000}
+              step={currency === "thb" ? 10_000 : 500}
               min={0}
               value={initial}
               onChange={(e) => setInitial(Math.max(0, Number(e.target.value) || 0))}
@@ -81,12 +115,12 @@ export function DcaSimulator() {
 
           <div>
             <label htmlFor="dca-monthly" className="label-caps mb-2 block">
-              เงิน DCA ต่อเดือน (บาท)
+              เงิน DCA ต่อเดือน ({unitLabel(currency)})
             </label>
             <input
               id="dca-monthly"
               type="number"
-              step={1000}
+              step={currency === "thb" ? 1_000 : 50}
               min={0}
               value={monthly}
               onChange={(e) => setMonthly(Math.max(0, Number(e.target.value) || 0))}
@@ -126,9 +160,9 @@ export function DcaSimulator() {
               {dec2(result.units)} ออนซ์
             </p>
             <p className="mt-2 font-mono text-[11px] leading-relaxed text-ink-faint">
-              ต้นทุนเฉลี่ย {thb(result.avgCost)} บาท/ออนซ์
+              ต้นทุนเฉลี่ย {price(result.avgCost, currency)} {unitLabel(currency)}/ออนซ์
               <br />
-              ราคาล่าสุด {thb(result.finalPrice)} บาท/ออนซ์
+              ราคาล่าสุด {price(result.finalPrice, currency)} {unitLabel(currency)}/ออนซ์
             </p>
           </div>
 
@@ -144,11 +178,19 @@ export function DcaSimulator() {
           {/* ---- Stat cards ---- */}
           <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
-              { label: "เงินที่ลงทุนไปทั้งหมด (บาท)", value: thb(result.invested), tone: "ink" },
-              { label: "มูลค่ารวมปัจจุบัน (บาท)", value: thb(result.value), tone: "gold" },
               {
-                label: `${positive ? "กำไร" : "ขาดทุน"} (บาท)`,
-                value: thb(Math.abs(result.gain)),
+                label: `เงินที่ลงทุนไปทั้งหมด (${unitLabel(currency)})`,
+                value: money(result.invested),
+                tone: "ink",
+              },
+              {
+                label: `มูลค่ารวมปัจจุบัน (${unitLabel(currency)})`,
+                value: money(result.value),
+                tone: "gold",
+              },
+              {
+                label: `${positive ? "กำไร" : "ขาดทุน"} (${unitLabel(currency)})`,
+                value: money(Math.abs(result.gain)),
                 sub: pctSigned(result.gainPct),
                 tone: positive ? "gold" : "danger",
               },
@@ -214,7 +256,7 @@ export function DcaSimulator() {
                   minTickGap={48}
                 />
                 <YAxis
-                  tickFormatter={thbCompact}
+                  tickFormatter={(v: number) => `${currencySymbol(currency)}${moneyCompact(v)}`}
                   tick={{ fill: "#A79E8C", fontSize: 11 }}
                   tickLine={false}
                   axisLine={false}
@@ -234,11 +276,11 @@ export function DcaSimulator() {
                         </div>
                         <div className="flex justify-between gap-4">
                           <span style={{ color: INVESTED }}>เงินที่ลงทุน</span>
-                          <span className="tabular">{thb(d.invested)}</span>
+                          <span className="tabular">{money(d.invested)}</span>
                         </div>
                         <div className="flex justify-between gap-4">
                           <span style={{ color: GOLD_LIGHT }}>มูลค่ารวม</span>
-                          <span className="tabular">{thb(d.value)}</span>
+                          <span className="tabular">{money(d.value)}</span>
                         </div>
                         <div className="mt-1 flex justify-between gap-4 border-t border-line pt-1">
                           <span className="text-ink-faint">
@@ -248,7 +290,7 @@ export function DcaSimulator() {
                             className="tabular"
                             style={{ color: gain >= 0 ? GOLD_LIGHT : DANGER }}
                           >
-                            {thb(Math.abs(gain))} ({pctSigned(gainPct)})
+                            {money(Math.abs(gain))} ({pctSigned(gainPct)})
                           </span>
                         </div>
                       </div>
@@ -311,7 +353,7 @@ export function DcaSimulator() {
           <section>
             <h3 className="text-sm font-medium text-ink">ถ้าเอาเงินตารางเดียวกันไปลงสินทรัพย์อื่น</h3>
             <p className="mb-3 mt-1 text-xs leading-relaxed text-ink-faint">
-              เงินที่ใส่เท่ากันทุกงวด ต่างกันแค่ซื้ออะไร · หุ้นไทยและตราสารหนี้ใช้ดัชนีผลตอบแทนรวม
+              เงินที่ใส่เท่ากันทุกงวด ต่างกันแค่ซื้ออะไร · หุ้นสหรัฐฯ และพันธบัตรใช้ดัชนีผลตอบแทนรวม
               ฐาน 100 จากชุดข้อมูลเดียวกัน
             </p>
             <div className="overflow-x-auto">
@@ -338,8 +380,8 @@ export function DcaSimulator() {
                           {c.label}
                         </span>
                       </td>
-                      <td className="strong text-right">{thb(c.r.invested)}</td>
-                      <td className="strong text-right">{thb(c.r.value)}</td>
+                      <td className="strong text-right">{money(c.r.invested)}</td>
+                      <td className="strong text-right">{money(c.r.value)}</td>
                       <td
                         className="strong text-right"
                         style={{ color: c.r.gain >= 0 ? undefined : DANGER }}

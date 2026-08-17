@@ -3,6 +3,7 @@ import { Fraunces, IBM_Plex_Mono, IBM_Plex_Sans, IBM_Plex_Sans_Thai } from "next
 
 import { Footer } from "@/components/Footer";
 import { Nav } from "@/components/Nav";
+import { CurrencyProvider } from "@/lib/currency-context";
 
 import "./globals.css";
 
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
     template: "%s · เคสศึกษาการจัดสรรเงินลงทุนในทองคำ",
   },
   description:
-    "เคสศึกษาการจัดสรรเงินลงทุนในทองคำ ขับเคลื่อนด้วยข้อมูลราคาย้อนหลังจริงของทองคำ หุ้นไทย และตราสารหนี้ พร้อม Monte Carlo simulation",
+    "เคสศึกษาการจัดสรรเงินลงทุนในทองคำ ขับเคลื่อนด้วยข้อมูลราคาย้อนหลังจริงของทองคำ หุ้นสหรัฐฯ (S&P 500) และพันธบัตรรัฐบาลสหรัฐฯ พร้อม Monte Carlo simulation ดูได้ทั้งฐานเงินบาทและดอลลาร์",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -62,9 +63,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       }
     >
       <body className="flex min-h-screen flex-col">
-        <Nav />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <CurrencyProvider>
+          <Nav />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </CurrencyProvider>
       </body>
     </html>
   );
