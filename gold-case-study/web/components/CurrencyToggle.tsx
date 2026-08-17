@@ -24,32 +24,42 @@ const OPTIONS: { key: Currency; label: string; title: string }[] = [
  */
 export function CurrencyToggle() {
   const { currency, setCurrency } = useCurrency();
+  const options = OPTIONS.filter((o) => CURRENCIES.includes(o.key));
+  const active = options.find((o) => o.key === currency) ?? options[0];
+  const other = options.find((o) => o.key !== currency) ?? options[1];
+  const isRight = options.indexOf(active) === 1;
 
   return (
-    <div
-      role="group"
-      aria-label="ฐานสกุลเงินที่ใช้แสดงผล"
-      className="flex flex-none items-center"
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isRight}
+      aria-label="สลับฐานสกุลเงินที่ใช้แสดงผล"
+      title={active.title}
+      onClick={() => setCurrency(other.key)}
+      className="relative h-7 w-[52px] flex-none rounded-full border border-line bg-panel2
+                 transition-colors hover:border-gold/40 focus-visible:outline-none
+                 focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2
+                 focus-visible:ring-offset-bg"
     >
-      {OPTIONS.filter((o) => CURRENCIES.includes(o.key)).map((o, i) => (
-        <span key={o.key} className="flex items-center">
-          {/* เส้นคั่นบาง ๆ แทนกรอบ — บอกว่าสองปุ่มเป็นชุดเดียวกันโดยไม่เพิ่มกล่องอีกใบบนแถบเมนู */}
-          {i > 0 && <span className="mx-1 h-3 w-px bg-line" aria-hidden />}
-          <button
-            type="button"
-            onClick={() => setCurrency(o.key)}
-            data-active={currency === o.key}
-            aria-pressed={currency === o.key}
-            title={o.title}
-            className="rounded px-1.5 py-1 font-mono text-[13px] leading-none transition-colors
-                       text-ink-faint hover:text-ink
-                       focus-visible:outline-none focus-visible:text-ink
-                       data-[active=true]:text-gold-light"
-          >
-            {o.label}
-          </button>
-        </span>
-      ))}
-    </div>
+      {/* สัญลักษณ์ทั้งสองฝั่งอยู่นิ่งอยู่แล้ว ปุ่มกลมจะเลื่อนไปทับฝั่งที่กำลัง active */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 flex items-center justify-between
+                   px-[7px] font-mono text-[11px] text-ink-faint"
+      >
+        <span>{options[0].label}</span>
+        <span>{options[1].label}</span>
+      </span>
+      <span
+        aria-hidden
+        className={`absolute left-[2px] top-1/2 flex h-[22px] w-[22px] -translate-y-1/2
+                    items-center justify-center rounded-full bg-gold font-mono text-[12px]
+                    font-semibold text-bg shadow-[0_1px_4px_rgba(0,0,0,0.4)]
+                    transition-transform duration-200 ${isRight ? "translate-x-[26px]" : "translate-x-0"}`}
+      >
+        {active.label}
+      </span>
+    </button>
   );
 }

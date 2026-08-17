@@ -26,8 +26,50 @@
 }
 
 @layer components {
+  /*
+   * กรอบไล่สี (glass border) — border จริงตั้งเป็น transparent (คง 1px ไว้กันเลย์เอาต์ขยับ)
+   * แล้ววาดวงแหวนไล่สีทองทับด้วย ::before ที่ mask เอาไว้เฉพาะเส้นขอบ (content-box ลบออกจาก
+   * กรอบเต็ม) เพราะ border-image ไม่รองรับ border-radius ให้มุมโค้งเรียบเหมือนกันไม่ได้
+   */
   .panel {
-    @apply rounded-xl border border-line bg-panel;
+    @apply relative rounded-xl border border-transparent bg-panel;
+  }
+  .panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      rgba(232, 199, 102, 0.5) 0%,
+      rgba(201, 162, 39, 0.08) 45%,
+      rgba(232, 199, 102, 0.32) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    transition: background 200ms;
+  }
+
+  /* การ์ดที่คลิกได้ (ลิงก์) — ใช้แทน hover:border-gold เดิม เพราะ border จริงถูกซ่อนไว้แล้ว
+     เปลี่ยนที่วงแหวนไล่สีให้สว่างขึ้นตอน hover แทนการเปลี่ยนสี border ตรง ๆ */
+  .panel-interactive {
+    @apply cursor-pointer transition-shadow;
+  }
+  .panel-interactive:hover::before {
+    background: linear-gradient(
+      135deg,
+      rgba(232, 199, 102, 0.9) 0%,
+      rgba(201, 162, 39, 0.3) 45%,
+      rgba(232, 199, 102, 0.75) 100%
+    );
   }
 
   .eyebrow {

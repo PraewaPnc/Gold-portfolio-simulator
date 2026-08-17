@@ -57,8 +57,10 @@ export default function HomePage() {
             <div className="mt-7 flex flex-wrap gap-3">
               <Link
                 href="/simulation"
-                className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-medium
-                           text-bg transition-colors hover:bg-gold-light"
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-b from-gold-light
+                           via-gold to-[#a8811d] px-4 py-2.5 text-sm font-medium text-bg
+                           shadow-[inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-1px_2px_rgba(0,0,0,0.25),0_2px_6px_rgba(0,0,0,0.35)]
+                           transition-[filter] hover:brightness-110"
               >
                 เริ่มจำลองพอร์ต <ArrowRight size={15} aria-hidden />
               </Link>
@@ -100,7 +102,7 @@ export default function HomePage() {
         <section className="mt-12">
           <h2 className="font-display text-xl font-semibold">เคสศึกษาแบ่งเป็น 3 ส่วน</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Link href="/reference" className="panel group p-5 transition-colors hover:border-gold/50">
+            <Link href="/reference" className="panel panel-interactive group p-5">
               <BarChart3 size={18} className="text-gold" aria-hidden />
               <h3 className="mt-3 font-display text-lg font-semibold">ข้อมูลย้อนหลัง</h3>
               <p className="mt-2 text-[13px] leading-relaxed text-ink-dim">
@@ -113,7 +115,7 @@ export default function HomePage() {
               </span>
             </Link>
 
-            <Link href="/simulation" className="panel group p-5 transition-colors hover:border-gold/50">
+            <Link href="/simulation" className="panel panel-interactive group p-5">
               <TrendingUp size={18} className="text-gold" aria-hidden />
               <h3 className="mt-3 font-display text-lg font-semibold">จำลองพอร์ต</h3>
               <p className="mt-2 text-[13px] leading-relaxed text-ink-dim">
@@ -126,7 +128,7 @@ export default function HomePage() {
               </span>
             </Link>
 
-            <Link href="/dca" className="panel group p-5 transition-colors hover:border-gold/50">
+            <Link href="/dca" className="panel panel-interactive group p-5">
               <Repeat size={18} className="text-gold" aria-hidden />
               <h3 className="mt-3 font-display text-lg font-semibold">DCA ทองคำ</h3>
               <p className="mt-2 text-[13px] leading-relaxed text-ink-dim">

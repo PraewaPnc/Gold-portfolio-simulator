@@ -87,7 +87,7 @@ export default function ReferencePage() {
               <Link
                 key={key}
                 href={`/reference/${key}`}
-                className="panel group flex flex-col p-4 transition-colors hover:border-gold/50"
+                className="panel panel-interactive group flex flex-col p-4"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="inline-flex items-center gap-2 text-[14px] font-medium text-ink">
