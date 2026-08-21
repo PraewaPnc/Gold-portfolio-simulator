@@ -6,9 +6,9 @@
  */
 export function CagrFormula({ note }: { note?: string }) {
   return (
-    <figure className="panel bg-panel2/40 px-4 py-5">
+    <figure className="panel bg-panel2 px-4 py-5">
       <div className="flex items-center justify-center overflow-x-auto">
-        <div className="flex items-center gap-2.5 font-display text-[15px] italic text-ink sm:text-[17px]">
+        <div className="flex items-center gap-2 font-display text-[10.5px] italic text-ink sm:text-[11.5px]">
           <span>CAGR</span>
           <span aria-hidden>=</span>
 
@@ -25,7 +25,7 @@ export function CagrFormula({ note }: { note?: string }) {
             <Paren>)</Paren>
 
             {/* เลขชี้กำลัง 1/n */}
-            <span className="mt-0.5 flex flex-col items-center text-[9px] not-italic leading-none sm:text-[10px]">
+            <span className="mt-0.5 flex flex-col items-center text-[6.5px] not-italic leading-none sm:text-[7.5px]">
               <span className="px-1 pb-[2px]">1</span>
               <span className="w-full border-t border-ink-dim" />
               <span className="px-1 pt-[2px] italic">n</span>
@@ -37,7 +37,7 @@ export function CagrFormula({ note }: { note?: string }) {
         </div>
       </div>
 
-      <figcaption className="mt-3.5 border-t border-line pt-3 text-center text-[11.5px] leading-relaxed text-ink-faint">
+      <figcaption className="mt-3.5 border-t border-line pt-3 text-center text-[9.5px] leading-relaxed text-ink-faint">
         <span className="font-mono not-italic text-ink-dim">n</span> = จำนวนปีของช่วงที่วัด ·
         CAGR คืออัตราผลตอบแทนทบต้นคงที่ที่ทำให้เงินต้นเติบโตจากมูลค่าต้นงวดไปถึงมูลค่าปลายงวดพอดี
         {note ? ` · ${note}` : ""}

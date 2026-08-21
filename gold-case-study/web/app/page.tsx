@@ -1,11 +1,30 @@
-import { ArrowRight, BarChart3, Repeat, Sparkles, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  Coins,
+  Landmark,
+  Link2,
+  Repeat,
+  Shield,
+  Sparkle,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { CagrFormula } from "@/components/CagrFormula";
 import { DataBadge } from "@/components/DataBadge";
 import { TrailingTable } from "@/components/home/TrailingTable";
+import { InfoHint } from "@/components/InfoHint";
 import { dataRange, dataYears, formatThaiDate } from "@/lib/data";
+
+const GOLD_ROLES = [
+  { icon: Coins, title: "Zero Yield", body: "ไม่สร้างดอกเบี้ยหรือเงินปันผล" },
+  { icon: Shield, title: "Risk Cushion", body: "ช่วยรองรับพอร์ตในช่วงวิกฤต" },
+  { icon: Link2, title: "Diversification", body: "Correlation ต่ำ ช่วยกระจายความเสี่ยง" },
+  { icon: Landmark, title: "Capital Preservation", body: "รักษาความมั่งคั่งและลด Max Drawdown" },
+];
 
 export default function HomePage() {
   return (
@@ -13,7 +32,7 @@ export default function HomePage() {
       {/* ---------- Hero ---------- */}
       {/* ภาพเป็นพื้นหลังเต็ม section (หลุดจากกรอบ max-w-6xl ของหน้าที่เหลือไปเต็มความกว้างจอ)
           ข้อความลอยทับด้านบน จึงต้องมี scrim ไล่สีเข้มด้านซ้ายให้อ่านออกชัดเจนตลอดที่ข้อความอยู่ */}
-      <section className="relative overflow-hidden">
+      <section className="relative flex min-h-[480px] items-center overflow-hidden sm:min-h-[640px]">
         <div className="absolute inset-0 -z-10">
           <Image
             src="/gold-bars.jpg"
@@ -35,12 +54,12 @@ export default function HomePage() {
           <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-bg to-transparent sm:h-28" />
         </div>
 
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
           <div className="max-w-2xl">
-            <p className="eyebrow flex items-center gap-1.5">
-              <Sparkles size={13} aria-hidden /> Gold Allocation Case Study
+            <p className="eyebrow flex items-center gap-1.5 text-[13px]">
+              <Sparkles size={15} aria-hidden /> Gold Allocation Case Study
             </p>
-            <h1 className="mt-3 font-display text-3xl font-semibold leading-tight sm:text-[40px]">
+            <h1 className="mt-3 font-display text-4xl font-semibold leading-tight sm:text-[48px]">
               ถ้ามีเงิน 1 ล้านบาท ควรลงทุนทองคำเท่าไร?
             </h1>
             <p className="mt-4 text-[15px] leading-relaxed text-ink-dim">
@@ -76,20 +95,73 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-        {/* ---------- ตารางเปรียบเทียบผลตอบแทนตามช่วงเวลา ---------- */}
-        {/* จำกัดความกว้างให้พอดีตาราง (กว้างจริงราว 460px) แล้วจัดทั้งบล็อกไว้กลางหน้า */}
-        <section className="mx-auto mt-12 max-w-xl text-center">
-          <h2 className="label-caps text-[15px]">ผลตอบแทนทบต้นต่อปี (CAGR) แยกตามช่วงเวลา</h2>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-ink-dim">
-            ช่วงเวลาที่เลือกเปลี่ยนข้อสรุปได้ทั้งหมด — ตัวเลขย้อนหลัง 1 ปี
-            ไม่ได้บอกอะไรเกี่ยวกับผลตอบแทนระยะยาว
-          </p>
+      {/* ---------- บทบาทของทองคำในพอร์ต ---------- */}
+      <section className="bg-panel/30">
+        <div className="mx-auto max-w-6xl px-4 pb-8 pt-12 sm:px-6 sm:pb-10 sm:pt-16">
+          <div className="text-center">
+            <p className="eyebrow">The Role of Gold</p>
+            <h2 className="mx-auto mt-2 max-w-xl font-display text-2xl font-semibold leading-snug sm:text-[26px]">
+              ไม่ใช่ตัวเร่งผลตอบแทน แต่เป็นตัวช่วยปกป้องพอร์ต
+            </h2>
 
-          <div className="mt-4">
-            <CagrFormula />
+            {/* เส้นคั่นลายไทยประดับ — เส้นเรียวสอบปลายทั้งสองข้าง ไล่สีจางที่ปลายเข้มตรงกลาง
+                คั่นกลางด้วยดาวกระพริบและจุดเล็ก ๆ */}
+            <div className="mx-auto mt-5 flex max-w-2xl items-center gap-2.5" aria-hidden>
+              <svg viewBox="0 0 500 24" preserveAspectRatio="none" className="h-3 flex-1">
+                <defs>
+                  <linearGradient id="divider-fade-l" x1="0" x2="1" y1="0" y2="0">
+                    <stop offset="0%" stopColor="#C9A227" stopOpacity="0" />
+                    <stop offset="70%" stopColor="#E8C766" stopOpacity="0.85" />
+                    <stop offset="100%" stopColor="#E8C766" />
+                  </linearGradient>
+                </defs>
+                <path d="M0,12 Q330,3 494,12 Q330,21 0,12 Z" fill="url(#divider-fade-l)" />
+              </svg>
+              <span className="h-1 w-1 shrink-0 rotate-45 bg-gold/70" />
+              <Sparkle size={16} className="shrink-0 fill-gold text-gold" />
+              <span className="h-1 w-1 shrink-0 rotate-45 bg-gold/70" />
+              <svg viewBox="0 0 500 24" preserveAspectRatio="none" className="h-3 flex-1">
+                <defs>
+                  <linearGradient id="divider-fade-r" x1="1" x2="0" y1="0" y2="0">
+                    <stop offset="0%" stopColor="#C9A227" stopOpacity="0" />
+                    <stop offset="70%" stopColor="#E8C766" stopOpacity="0.85" />
+                    <stop offset="100%" stopColor="#E8C766" />
+                  </linearGradient>
+                </defs>
+                <path d="M500,12 Q170,3 6,12 Q170,21 500,12 Z" fill="url(#divider-fade-r)" />
+              </svg>
+            </div>
           </div>
 
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {GOLD_ROLES.map((role) => (
+              <div key={role.title} className="panel px-5 py-6 text-center">
+                <div className="mx-auto flex h-11 w-11 items-center justify-center">
+                  <role.icon size={30} className="text-gold" aria-hidden />
+                </div>
+                <h3 className="mt-4 font-display text-[15px] font-semibold">{role.title}</h3>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-ink-dim">{role.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6 sm:pb-14 sm:pt-8">
+        {/* ---------- ตารางเปรียบเทียบผลตอบแทนตามช่วงเวลา ---------- */}
+        {/* จำกัดความกว้างให้พอดีตาราง (กว้างจริงราว 460px) แล้วจัดทั้งบล็อกไว้กลางหน้า */}
+        <section className="mx-auto mt-4 max-w-2xl text-center sm:mt-6">
+          <h2 className="font-medium uppercase tracking-[0.08em] text-ink text-[19px]">
+            ผลตอบแทนทบต้นต่อปี (CAGR) แยกตามช่วงเวลา{" "}
+            <InfoHint
+              label="สูตรการคำนวณ CAGR"
+              align="center"
+              side="top"
+              panelClassName="w-[min(92vw,440px)] rounded-xl bg-bg shadow-2xl"
+            >
+              <CagrFormula />
+            </InfoHint>
+          </h2>
           <TrailingTable />
 
           <p className="mt-2.5 text-[11.5px] leading-relaxed text-ink-faint">

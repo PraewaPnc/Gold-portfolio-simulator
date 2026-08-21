@@ -1,6 +1,6 @@
 "use client";
 
-import { Coins } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -19,7 +19,14 @@ export function Nav() {
     <header className="sticky top-0 z-30 bg-bg/90 backdrop-blur">
       <nav className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 text-ink transition-colors hover:text-gold-light">
-          <Coins size={17} className="shrink-0 text-gold" aria-hidden />
+          <Image
+            src="/gold-bar-icon.webp"
+            alt=""
+            width={22}
+            height={18}
+            className="shrink-0"
+            aria-hidden
+          />
           <span className="font-display text-[15px] font-semibold">การจัดสรรเงินลงทุนในทองคำ</span>
         </Link>
 

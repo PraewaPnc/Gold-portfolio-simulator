@@ -30,15 +30,15 @@ export function TrailingTable() {
   return (
     <>
       <div className="panel mt-3 overflow-x-auto">
-        <table className="data-table mx-auto w-auto">
+        <table className="data-table mx-auto w-auto text-[13.5px]">
           <thead>
             <tr>
-              <th className="!text-center">สินทรัพย์</th>
+              <th className="!text-center text-[11.5px]">สินทรัพย์</th>
               {trailing.map((w) => (
-                <th key={w.key} className="w-[92px] !text-center">
+                <th key={w.key} className="w-[112px] !text-center text-[11.5px]">
                   {w.label}
                   {w.key === "all" && (
-                    <span className="mt-0.5 block font-mono text-[9.5px] normal-case tracking-normal text-ink-faint">
+                    <span className="mt-0.5 block font-mono text-[10.5px] normal-case tracking-normal text-ink-faint">
                       {w.years} ปี
                     </span>
                   )}
@@ -50,7 +50,7 @@ export function TrailingTable() {
             {ASSETS.map((key) => (
               <tr key={key}>
                 <td className="whitespace-nowrap">
-                  <span className="inline-flex items-center gap-2 text-ink">
+                  <span className="inline-flex items-center gap-2 text-[13.5px] text-ink">
                     <span className={`h-2.5 w-2.5 rounded-sm ${ASSET_DOT[key]}`} aria-hidden />
                     {stats.assets[key].label}
                   </span>
@@ -60,13 +60,13 @@ export function TrailingTable() {
                   return (
                     <td key={w.key} className="text-center align-top">
                       <span
-                        className={`block font-mono text-[15px] tabular ${
+                        className={`block font-mono text-[16.5px] tabular ${
                           s.cagr >= 0 ? ASSET_COLOR[key] : "text-danger"
                         }`}
                       >
                         {pctSigned(s.cagr)}
                       </span>
-                      <span className="mt-0.5 block font-mono text-[10.5px] tabular text-ink-faint">
+                      <span className="mt-0.5 block font-mono text-[11.5px] tabular text-ink-faint">
                         ผันผวน {pct(s.annualVolatility, 0)}
                       </span>
                     </td>
@@ -77,7 +77,7 @@ export function TrailingTable() {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 font-mono text-[11px] text-ink-faint">
+      <p className="mt-2 font-mono text-[12px] text-ink-faint">
         ตัวเลขทั้งตารางเป็นผลตอบแทนในสกุล{unitLabel(currency)} · สลับสกุลเงินได้ที่มุมขวาบน
       </p>
     </>
