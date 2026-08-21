@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAt": "2026-08-16T16:02:20+00:00",
+    "generatedAt": "2026-08-21T15:15:22+00:00",
     "description": "ราคาย้อนหลังรายสัปดาห์ (ราคาปิดวันศุกร์) ของทองคำ, หุ้นสหรัฐฯ และพันธบัตรสหรัฐฯ โดย gold/equity/bond ถูก normalize ให้เริ่มต้นที่ 100 ณ วันแรกของช่วงข้อมูล ใช้ความถี่รายสัปดาห์เพื่อให้กราฟช่วงสั้น (6 เดือน / 1 ปี) มีจุดข้อมูลเพียงพอ ส่วนสถิติใน asset-stats.json คำนวณจากข้อมูลรายเดือน",
     "normalizedBase": 100,
     "baseCurrency": "usd",
@@ -11,10 +11,10 @@
       "months": 240,
       "years": 20.0,
       "frequency": "monthly (month-end)",
-      "seriesEnd": "2026-08-13",
+      "seriesEnd": "2026-08-19",
       "seriesStart": "2006-07-21",
       "seriesFrequency": "weekly (Friday close)",
-      "seriesPoints": 1048,
+      "seriesPoints": 1049,
       "excludedPartialFinalMonth": true
     },
     "fields": {
@@ -31,13 +31,13 @@
     }
   },
   "latest": {
-    "date": "2026-08-13",
-    "goldUsdPerOz": 4437.3,
-    "goldThbPerOz": 146785.89,
-    "equityCloseUsd": 776.34,
-    "equityCloseThb": 25681.33,
-    "bondYieldPct": 4.63,
-    "usdthb": 33.08
+    "date": "2026-08-19",
+    "goldUsdPerOz": 4650.4,
+    "goldThbPerOz": 153932.9,
+    "equityCloseUsd": 765.7,
+    "equityCloseThb": 25345.44,
+    "bondYieldPct": 4.65,
+    "usdthb": 33.101
   },
   "series": [
     {
@@ -2066,7 +2066,7 @@
     {
       "date": "2012-02-03",
       "gold": 280.49,
-      "equity": 121.78,
+      "equity": 121.79,
       "bond": 156.47,
       "usdthb": 30.918
     },
@@ -3319,7 +3319,7 @@
     {
       "date": "2015-07-10",
       "gold": 186.85,
-      "equity": 201.54,
+      "equity": 201.55,
       "bond": 161.68,
       "usdthb": 33.914
     },
@@ -3578,7 +3578,7 @@
     {
       "date": "2016-03-25",
       "gold": 197.13,
-      "equity": 200.54,
+      "equity": 200.55,
       "bond": 171.66,
       "usdthb": 35.335
     },
@@ -4306,7 +4306,7 @@
     {
       "date": "2018-03-23",
       "gold": 217.77,
-      "equity": 265.0,
+      "equity": 265.01,
       "bond": 165.25,
       "usdthb": 31.27
     },
@@ -4369,7 +4369,7 @@
     {
       "date": "2018-05-25",
       "gold": 210.35,
-      "equity": 279.48,
+      "equity": 279.49,
       "bond": 164.51,
       "usdthb": 32.0
     },
@@ -4719,7 +4719,7 @@
     {
       "date": "2019-05-10",
       "gold": 207.5,
-      "equity": 301.6,
+      "equity": 301.61,
       "bond": 175.85,
       "usdthb": 31.78
     },
@@ -5076,7 +5076,7 @@
     {
       "date": "2020-05-01",
       "gold": 273.48,
-      "equity": 302.09,
+      "equity": 302.1,
       "bond": 211.14,
       "usdthb": 32.423
     },
@@ -5153,7 +5153,7 @@
     {
       "date": "2020-07-17",
       "gold": 291.85,
-      "equity": 345.19,
+      "equity": 345.2,
       "bond": 211.39,
       "usdthb": 31.7
     },
@@ -5454,7 +5454,7 @@
     {
       "date": "2021-05-14",
       "gold": 296.63,
-      "equity": 452.15,
+      "equity": 452.16,
       "bond": 194.2,
       "usdthb": 31.34
     },
@@ -5608,7 +5608,7 @@
     {
       "date": "2021-10-15",
       "gold": 285.22,
-      "equity": 487.08,
+      "equity": 487.09,
       "bond": 196.06,
       "usdthb": 33.17
     },
@@ -6028,7 +6028,7 @@
     {
       "date": "2022-12-09",
       "gold": 290.2,
-      "equity": 436.13,
+      "equity": 436.14,
       "bond": 169.69,
       "usdthb": 34.73
     },
@@ -6812,7 +6812,7 @@
     {
       "date": "2025-01-31",
       "gold": 453.92,
-      "equity": 689.38,
+      "equity": 689.39,
       "bond": 170.32,
       "usdthb": 33.61
     },
@@ -7316,7 +7316,7 @@
     {
       "date": "2026-06-19",
       "gold": 681.75,
-      "equity": 870.03,
+      "equity": 870.04,
       "bond": 182.26,
       "usdthb": 32.771
     },
@@ -7370,11 +7370,18 @@
       "usdthb": 33.1
     },
     {
-      "date": "2026-08-13",
-      "gold": 716.16,
+      "date": "2026-08-14",
+      "gold": 706.97,
       "equity": 904.52,
-      "bond": 181.09,
-      "usdthb": 33.08
+      "bond": 180.38,
+      "usdthb": 33.17
+    },
+    {
+      "date": "2026-08-19",
+      "gold": 750.55,
+      "equity": 892.13,
+      "bond": 180.97,
+      "usdthb": 33.101
     }
   ],
   "monthly": [
@@ -7424,7 +7431,7 @@
       "equity": 110.4,
       "bond": 105.86,
       "goldUsdPerOz": 646.9,
-      "equityCloseUsd": 97.7374,
+      "equityCloseUsd": 97.7375,
       "bondYieldPct": 4.46,
       "usdthb": 35.788
     },
@@ -7434,7 +7441,7 @@
       "equity": 111.88,
       "bond": 104.19,
       "goldUsdPerOz": 635.2,
-      "equityCloseUsd": 99.0444,
+      "equityCloseUsd": 99.0443,
       "bondYieldPct": 4.71,
       "usdthb": 36.045
     },
@@ -7484,7 +7491,7 @@
       "equity": 121.6,
       "bond": 104.65,
       "goldUsdPerOz": 661.0,
-      "equityCloseUsd": 107.6523,
+      "equityCloseUsd": 107.6522,
       "bondYieldPct": 4.9,
       "usdthb": 32.693
     },
@@ -7494,7 +7501,7 @@
       "equity": 119.82,
       "bond": 104.03,
       "goldUsdPerOz": 648.1,
-      "equityCloseUsd": 106.0782,
+      "equityCloseUsd": 106.0783,
       "bondYieldPct": 5.03,
       "usdthb": 31.663
     },
@@ -7534,7 +7541,7 @@
       "equity": 123.77,
       "bond": 110.29,
       "goldUsdPerOz": 792.0,
-      "equityCloseUsd": 109.5715,
+      "equityCloseUsd": 109.5714,
       "bondYieldPct": 4.48,
       "usdthb": 31.627
     },
@@ -7544,7 +7551,7 @@
       "equity": 118.97,
       "bond": 115.27,
       "goldUsdPerOz": 782.2,
-      "equityCloseUsd": 105.3275,
+      "equityCloseUsd": 105.3274,
       "bondYieldPct": 3.97,
       "usdthb": 30.493
     },
@@ -7574,7 +7581,7 @@
       "equity": 107.67,
       "bond": 120.64,
       "goldUsdPerOz": 972.1,
-      "equityCloseUsd": 95.3163,
+      "equityCloseUsd": 95.3164,
       "bondYieldPct": 3.53,
       "usdthb": 29.603
     },
@@ -7594,7 +7601,7 @@
       "equity": 111.79,
       "bond": 118.95,
       "goldUsdPerOz": 862.8,
-      "equityCloseUsd": 98.9663,
+      "equityCloseUsd": 98.9664,
       "bondYieldPct": 3.77,
       "usdthb": 31.5
     },
@@ -7624,7 +7631,7 @@
       "equity": 103.06,
       "bond": 117.98,
       "goldUsdPerOz": 913.9,
-      "equityCloseUsd": 91.2388,
+      "equityCloseUsd": 91.2389,
       "bondYieldPct": 3.99,
       "usdthb": 33.354
     },
@@ -7634,7 +7641,7 @@
       "equity": 104.65,
       "bond": 119.92,
       "goldUsdPerOz": 829.3,
-      "equityCloseUsd": 92.6489,
+      "equityCloseUsd": 92.6488,
       "bondYieldPct": 3.83,
       "usdthb": 34.03
     },
@@ -7724,7 +7731,7 @@
       "equity": 76.78,
       "bond": 126.03,
       "goldUsdPerOz": 978.8,
-      "equityCloseUsd": 67.9761,
+      "equityCloseUsd": 67.976,
       "bondYieldPct": 3.47,
       "usdthb": 34.213
     },
@@ -7744,7 +7751,7 @@
       "equity": 82.46,
       "bond": 126.24,
       "goldUsdPerOz": 953.7,
-      "equityCloseUsd": 72.9995,
+      "equityCloseUsd": 72.9996,
       "bondYieldPct": 3.52,
       "usdthb": 33.872
     },
@@ -7754,7 +7761,7 @@
       "equity": 85.5,
       "bond": 127.88,
       "goldUsdPerOz": 951.7,
-      "equityCloseUsd": 75.6961,
+      "equityCloseUsd": 75.6962,
       "bondYieldPct": 3.4,
       "usdthb": 33.842
     },
@@ -7784,7 +7791,7 @@
       "equity": 92.18,
       "bond": 131.02,
       "goldUsdPerOz": 1181.1,
-      "equityCloseUsd": 81.6092,
+      "equityCloseUsd": 81.6091,
       "bondYieldPct": 3.21,
       "usdthb": 32.945
     },
@@ -7804,7 +7811,7 @@
       "equity": 90.53,
       "bond": 127.19,
       "goldUsdPerOz": 1083.0,
-      "equityCloseUsd": 80.1454,
+      "equityCloseUsd": 80.1455,
       "bondYieldPct": 3.63,
       "usdthb": 33.009
     },
@@ -7834,7 +7841,7 @@
       "equity": 100.57,
       "bond": 127.72,
       "goldUsdPerOz": 1180.1,
-      "equityCloseUsd": 89.0334,
+      "equityCloseUsd": 89.0333,
       "bondYieldPct": 3.69,
       "usdthb": 32.155
     },
@@ -7844,7 +7851,7 @@
       "equity": 92.58,
       "bond": 132.19,
       "goldUsdPerOz": 1212.2,
-      "equityCloseUsd": 81.9592,
+      "equityCloseUsd": 81.9593,
       "bondYieldPct": 3.31,
       "usdthb": 32.43
     },
@@ -7884,7 +7891,7 @@
       "equity": 97.59,
       "bond": 142.6,
       "goldUsdPerOz": 1307.8,
-      "equityCloseUsd": 86.3932,
+      "equityCloseUsd": 86.3933,
       "bondYieldPct": 2.53,
       "usdthb": 30.255
     },
@@ -7924,7 +7931,7 @@
       "equity": 110.61,
       "bond": 133.38,
       "goldUsdPerOz": 1333.8,
-      "equityCloseUsd": 97.9195,
+      "equityCloseUsd": 97.9194,
       "bondYieldPct": 3.42,
       "usdthb": 30.89
     },
@@ -7954,7 +7961,7 @@
       "equity": 117.78,
       "bond": 135.65,
       "goldUsdPerOz": 1556.0,
-      "equityCloseUsd": 104.2678,
+      "equityCloseUsd": 104.2679,
       "bondYieldPct": 3.32,
       "usdthb": 29.766
     },
@@ -8184,7 +8191,7 @@
       "equity": 141.16,
       "bond": 159.77,
       "goldUsdPerOz": 1594.8,
-      "equityCloseUsd": 124.9721,
+      "equityCloseUsd": 124.9722,
       "bondYieldPct": 1.87,
       "usdthb": 29.289
     },
@@ -8204,7 +8211,7 @@
       "equity": 147.27,
       "bond": 156.08,
       "goldUsdPerOz": 1392.6,
-      "equityCloseUsd": 130.3804,
+      "equityCloseUsd": 130.3805,
       "bondYieldPct": 2.16,
       "usdthb": 30.102
     },
@@ -8224,7 +8231,7 @@
       "equity": 152.82,
       "bond": 150.71,
       "goldUsdPerOz": 1312.4,
-      "equityCloseUsd": 135.2882,
+      "equityCloseUsd": 135.2883,
       "bondYieldPct": 2.6,
       "usdthb": 31.232
     },
@@ -8234,7 +8241,7 @@
       "equity": 148.23,
       "bond": 148.7,
       "goldUsdPerOz": 1396.1,
-      "equityCloseUsd": 131.2307,
+      "equityCloseUsd": 131.2306,
       "bondYieldPct": 2.78,
       "usdthb": 32.109
     },
@@ -8284,7 +8291,7 @@
       "equity": 163.06,
       "bond": 151.78,
       "goldUsdPerOz": 1240.1,
-      "equityCloseUsd": 144.3582,
+      "equityCloseUsd": 144.3583,
       "bondYieldPct": 2.67,
       "usdthb": 32.986
     },
@@ -8324,7 +8331,7 @@
       "equity": 177.11,
       "bond": 155.68,
       "goldUsdPerOz": 1245.6,
-      "equityCloseUsd": 156.7948,
+      "equityCloseUsd": 156.7949,
       "bondYieldPct": 2.48,
       "usdthb": 32.773
     },
@@ -8384,7 +8391,7 @@
       "equity": 192.26,
       "bond": 161.8,
       "goldUsdPerOz": 1175.2,
-      "equityCloseUsd": 170.2104,
+      "equityCloseUsd": 170.2105,
       "bondYieldPct": 2.18,
       "usdthb": 32.77
     },
@@ -8454,7 +8461,7 @@
       "equity": 193.86,
       "bond": 161.16,
       "goldUsdPerOz": 1171.5,
-      "equityCloseUsd": 171.6246,
+      "equityCloseUsd": 171.6245,
       "bondYieldPct": 2.35,
       "usdthb": 33.729
     },
@@ -8574,7 +8581,7 @@
       "equity": 201.56,
       "bond": 177.63,
       "goldUsdPerOz": 1318.4,
-      "equityCloseUsd": 178.4379,
+      "equityCloseUsd": 178.4378,
       "bondYieldPct": 1.49,
       "usdthb": 35.113
     },
@@ -8634,7 +8641,7 @@
       "equity": 217.44,
       "bond": 164.27,
       "goldUsdPerOz": 1150.0,
-      "equityCloseUsd": 192.4956,
+      "equityCloseUsd": 192.4955,
       "bondYieldPct": 2.45,
       "usdthb": 35.878
     },
@@ -8654,7 +8661,7 @@
       "equity": 230.02,
       "bond": 166.24,
       "goldUsdPerOz": 1252.6,
-      "equityCloseUsd": 203.6391,
+      "equityCloseUsd": 203.6389,
       "bondYieldPct": 2.36,
       "usdthb": 34.84
     },
@@ -8694,7 +8701,7 @@
       "equity": 237.38,
       "bond": 168.26,
       "goldUsdPerOz": 1240.7,
-      "equityCloseUsd": 210.1547,
+      "equityCloseUsd": 210.1548,
       "bondYieldPct": 2.31,
       "usdthb": 33.97
     },
@@ -8744,7 +8751,7 @@
       "equity": 261.46,
       "bond": 168.21,
       "goldUsdPerOz": 1273.2,
-      "equityCloseUsd": 231.4703,
+      "equityCloseUsd": 231.4702,
       "bondYieldPct": 2.42,
       "usdthb": 32.57
     },
@@ -8764,7 +8771,7 @@
       "equity": 279.55,
       "bond": 164.51,
       "goldUsdPerOz": 1339.0,
-      "equityCloseUsd": 247.4812,
+      "equityCloseUsd": 247.4813,
       "bondYieldPct": 2.72,
       "usdthb": 31.397
     },
@@ -8804,7 +8811,7 @@
       "equity": 269.75,
       "bond": 164.48,
       "goldUsdPerOz": 1300.1,
-      "equityCloseUsd": 238.812,
+      "equityCloseUsd": 238.8119,
       "bondYieldPct": 2.83,
       "usdthb": 32.03
     },
@@ -8814,7 +8821,7 @@
       "equity": 271.31,
       "bond": 164.58,
       "goldUsdPerOz": 1251.3,
-      "equityCloseUsd": 240.1854,
+      "equityCloseUsd": 240.1853,
       "bondYieldPct": 2.85,
       "usdthb": 33.15
     },
@@ -8824,7 +8831,7 @@
       "equity": 281.36,
       "bond": 163.42,
       "goldUsdPerOz": 1223.7,
-      "equityCloseUsd": 249.0834,
+      "equityCloseUsd": 249.0835,
       "bondYieldPct": 2.96,
       "usdthb": 33.259
     },
@@ -8864,7 +8871,7 @@
       "equity": 276.92,
       "bond": 164.35,
       "goldUsdPerOz": 1220.2,
-      "equityCloseUsd": 245.1593,
+      "equityCloseUsd": 245.1592,
       "bondYieldPct": 3.01,
       "usdthb": 32.91
     },
@@ -8894,7 +8901,7 @@
       "equity": 281.6,
       "bond": 169.48,
       "goldUsdPerOz": 1312.8,
-      "equityCloseUsd": 249.3014,
+      "equityCloseUsd": 249.3015,
       "bondYieldPct": 2.73,
       "usdthb": 31.429
     },
@@ -8924,7 +8931,7 @@
       "equity": 279.38,
       "bond": 179.54,
       "goldUsdPerOz": 1305.8,
-      "equityCloseUsd": 247.3356,
+      "equityCloseUsd": 247.3357,
       "bondYieldPct": 2.14,
       "usdthb": 31.79
     },
@@ -8954,7 +8961,7 @@
       "equity": 298.26,
       "bond": 191.13,
       "goldUsdPerOz": 1519.1,
-      "equityCloseUsd": 264.0504,
+      "equityCloseUsd": 264.0503,
       "bondYieldPct": 1.5,
       "usdthb": 30.632
     },
@@ -8964,7 +8971,7 @@
       "equity": 304.07,
       "bond": 188.22,
       "goldUsdPerOz": 1465.7,
-      "equityCloseUsd": 269.1881,
+      "equityCloseUsd": 269.188,
       "bondYieldPct": 1.68,
       "usdthb": 30.599
     },
@@ -8984,7 +8991,7 @@
       "equity": 322.04,
       "bond": 187.04,
       "goldUsdPerOz": 1465.6,
-      "equityCloseUsd": 285.098,
+      "equityCloseUsd": 285.0979,
       "bondYieldPct": 1.78,
       "usdthb": 30.22
     },
@@ -8994,7 +9001,7 @@
       "equity": 331.39,
       "bond": 184.96,
       "goldUsdPerOz": 1519.5,
-      "equityCloseUsd": 293.3815,
+      "equityCloseUsd": 293.3816,
       "bondYieldPct": 1.92,
       "usdthb": 29.97
     },
@@ -9004,7 +9011,7 @@
       "equity": 331.26,
       "bond": 192.24,
       "goldUsdPerOz": 1582.9,
-      "equityCloseUsd": 293.2632,
+      "equityCloseUsd": 293.2631,
       "bondYieldPct": 1.51,
       "usdthb": 31.12
     },
@@ -9024,7 +9031,7 @@
       "equity": 266.95,
       "bond": 207.79,
       "goldUsdPerOz": 1583.4,
-      "equityCloseUsd": 236.3257,
+      "equityCloseUsd": 236.3256,
       "bondYieldPct": 0.7,
       "usdthb": 32.64
     },
@@ -9064,14 +9071,14 @@
       "equity": 339.66,
       "bond": 211.28,
       "goldUsdPerOz": 1962.8,
-      "equityCloseUsd": 300.6968,
+      "equityCloseUsd": 300.6969,
       "bondYieldPct": 0.55,
       "usdthb": 31.31
     },
     {
       "date": "2020-08-31",
       "gold": 310.25,
-      "equity": 363.37,
+      "equity": 363.36,
       "bond": 207.92,
       "goldUsdPerOz": 1967.6,
       "equityCloseUsd": 321.6845,
@@ -9114,7 +9121,7 @@
       "equity": 392.15,
       "bond": 204.3,
       "goldUsdPerOz": 1893.1,
-      "equityCloseUsd": 347.1632,
+      "equityCloseUsd": 347.1633,
       "bondYieldPct": 0.93,
       "usdthb": 29.919
     },
@@ -9134,7 +9141,7 @@
       "equity": 398.94,
       "bond": 195.05,
       "goldUsdPerOz": 1728.1,
-      "equityCloseUsd": 353.1801,
+      "equityCloseUsd": 353.1802,
       "bondYieldPct": 1.44,
       "usdthb": 30.265
     },
@@ -9174,7 +9181,7 @@
       "equity": 451.92,
       "bond": 195.87,
       "goldUsdPerOz": 1770.8,
-      "equityCloseUsd": 400.0781,
+      "equityCloseUsd": 400.078,
       "bondYieldPct": 1.45,
       "usdthb": 32.124
     },
@@ -9184,7 +9191,7 @@
       "equity": 462.95,
       "bond": 199.95,
       "goldUsdPerOz": 1812.6,
-      "equityCloseUsd": 409.8449,
+      "equityCloseUsd": 409.845,
       "bondYieldPct": 1.24,
       "usdthb": 32.84
     },
@@ -9194,7 +9201,7 @@
       "equity": 476.73,
       "bond": 199.04,
       "goldUsdPerOz": 1815.0,
-      "equityCloseUsd": 422.0418,
+      "equityCloseUsd": 422.0419,
       "bondYieldPct": 1.3,
       "usdthb": 32.469
     },
@@ -9204,7 +9211,7 @@
       "equity": 454.51,
       "bond": 195.22,
       "goldUsdPerOz": 1755.3,
-      "equityCloseUsd": 402.3724,
+      "equityCloseUsd": 402.3725,
       "bondYieldPct": 1.52,
       "usdthb": 33.936
     },
@@ -9224,7 +9231,7 @@
       "equity": 482.49,
       "bond": 197.35,
       "goldUsdPerOz": 1773.6,
-      "equityCloseUsd": 427.1445,
+      "equityCloseUsd": 427.1444,
       "bondYieldPct": 1.43,
       "usdthb": 33.665
     },
@@ -9234,7 +9241,7 @@
       "equity": 504.8,
       "bond": 195.95,
       "goldUsdPerOz": 1827.5,
-      "equityCloseUsd": 446.8989,
+      "equityCloseUsd": 446.899,
       "bondYieldPct": 1.52,
       "usdthb": 33.325
     },
@@ -9251,7 +9258,7 @@
     {
       "date": "2022-02-28",
       "gold": 299.5,
-      "equity": 464.07,
+      "equity": 464.06,
       "bond": 190.98,
       "goldUsdPerOz": 1899.4,
       "equityCloseUsd": 410.8335,
@@ -9274,7 +9281,7 @@
       "equity": 439.25,
       "bond": 174.42,
       "goldUsdPerOz": 1909.3,
-      "equityCloseUsd": 388.863,
+      "equityCloseUsd": 388.8629,
       "bondYieldPct": 2.89,
       "usdthb": 34.434
     },
@@ -9284,7 +9291,7 @@
       "equity": 440.24,
       "bond": 175.44,
       "goldUsdPerOz": 1842.7,
-      "equityCloseUsd": 389.7408,
+      "equityCloseUsd": 389.7407,
       "bondYieldPct": 2.85,
       "usdthb": 34.088
     },
@@ -9294,7 +9301,7 @@
       "equity": 403.94,
       "bond": 173.91,
       "goldUsdPerOz": 1804.1,
-      "equityCloseUsd": 357.6026,
+      "equityCloseUsd": 357.6025,
       "bondYieldPct": 2.98,
       "usdthb": 35.078
     },
@@ -9354,7 +9361,7 @@
       "equity": 413.05,
       "bond": 163.88,
       "goldUsdPerOz": 1819.7,
-      "equityCloseUsd": 365.6734,
+      "equityCloseUsd": 365.6733,
       "bondYieldPct": 3.88,
       "usdthb": 34.58
     },
@@ -9364,7 +9371,7 @@
       "equity": 439.03,
       "bond": 169.31,
       "goldUsdPerOz": 1929.5,
-      "equityCloseUsd": 388.6696,
+      "equityCloseUsd": 388.6697,
       "bondYieldPct": 3.52,
       "usdthb": 32.76
     },
@@ -9374,7 +9381,7 @@
       "equity": 427.99,
       "bond": 164.3,
       "goldUsdPerOz": 1828.9,
-      "equityCloseUsd": 378.8976,
+      "equityCloseUsd": 378.8974,
       "bondYieldPct": 3.92,
       "usdthb": 34.99
     },
@@ -9414,7 +9421,7 @@
       "equity": 482.39,
       "bond": 167.72,
       "goldUsdPerOz": 1921.1,
-      "equityCloseUsd": 427.0554,
+      "equityCloseUsd": 427.0553,
       "bondYieldPct": 3.81,
       "usdthb": 35.62
     },
@@ -9424,7 +9431,7 @@
       "equity": 498.18,
       "bond": 166.08,
       "goldUsdPerOz": 1970.5,
-      "equityCloseUsd": 441.0342,
+      "equityCloseUsd": 441.0343,
       "bondYieldPct": 3.97,
       "usdthb": 34.24
     },
@@ -9434,7 +9441,7 @@
       "equity": 490.08,
       "bond": 165.02,
       "goldUsdPerOz": 1938.2,
-      "equityCloseUsd": 433.8665,
+      "equityCloseUsd": 433.8666,
       "bondYieldPct": 4.09,
       "usdthb": 34.995
     },
@@ -9454,7 +9461,7 @@
       "equity": 456.7,
       "bond": 156.11,
       "goldUsdPerOz": 1985.2,
-      "equityCloseUsd": 404.3145,
+      "equityCloseUsd": 404.3144,
       "bondYieldPct": 4.88,
       "usdthb": 35.91
     },
@@ -9544,7 +9551,7 @@
       "equity": 607.79,
       "bond": 171.44,
       "goldUsdPerOz": 2426.5,
-      "equityCloseUsd": 538.072,
+      "equityCloseUsd": 538.0719,
       "bondYieldPct": 4.09,
       "usdthb": 35.838
     },
@@ -9564,7 +9571,7 @@
       "equity": 635.06,
       "bond": 176.54,
       "goldUsdPerOz": 2636.1,
-      "equityCloseUsd": 562.2103,
+      "equityCloseUsd": 562.2104,
       "bondYieldPct": 3.81,
       "usdthb": 32.35
     },
@@ -9584,7 +9591,7 @@
       "equity": 666.92,
       "bond": 172.44,
       "goldUsdPerOz": 2657.0,
-      "equityCloseUsd": 590.4209,
+      "equityCloseUsd": 590.4208,
       "bondYieldPct": 4.18,
       "usdthb": 34.4
     },
@@ -9594,7 +9601,7 @@
       "equity": 650.88,
       "bond": 167.61,
       "goldUsdPerOz": 2629.2,
-      "equityCloseUsd": 576.2153,
+      "equityCloseUsd": 576.2152,
       "bondYieldPct": 4.58,
       "usdthb": 34.139
     },
@@ -9604,7 +9611,7 @@
       "equity": 668.36,
       "bond": 168.25,
       "goldUsdPerOz": 2812.5,
-      "equityCloseUsd": 591.6903,
+      "equityCloseUsd": 591.6904,
       "bondYieldPct": 4.58,
       "usdthb": 33.61
     },
@@ -9614,7 +9621,7 @@
       "equity": 659.87,
       "bond": 173.48,
       "goldUsdPerOz": 2836.8,
-      "equityCloseUsd": 584.179,
+      "equityCloseUsd": 584.1789,
       "bondYieldPct": 4.24,
       "usdthb": 34.05
     },
@@ -9644,7 +9651,7 @@
       "equity": 656.52,
       "bond": 172.94,
       "goldUsdPerOz": 3288.9,
-      "equityCloseUsd": 581.2127,
+      "equityCloseUsd": 581.2128,
       "bondYieldPct": 4.41,
       "usdthb": 32.53
     },
@@ -9664,7 +9671,7 @@
       "equity": 706.15,
       "bond": 174.73,
       "goldUsdPerOz": 3293.2,
-      "equityCloseUsd": 625.1531,
+      "equityCloseUsd": 625.1532,
       "bondYieldPct": 4.37,
       "usdthb": 32.71
     },
@@ -9789,14 +9796,14 @@
       "usdthb": 33.37
     },
     {
-      "date": "2026-08-13",
-      "gold": 699.67,
-      "equity": 876.93,
-      "bond": 179.21,
-      "goldUsdPerOz": 4437.3,
-      "equityCloseUsd": 776.34,
-      "bondYieldPct": 4.63,
-      "usdthb": 33.08
+      "date": "2026-08-19",
+      "gold": 733.27,
+      "equity": 864.91,
+      "bond": 178.93,
+      "goldUsdPerOz": 4650.4,
+      "equityCloseUsd": 765.7,
+      "bondYieldPct": 4.65,
+      "usdthb": 33.101
     }
   ]
 }
