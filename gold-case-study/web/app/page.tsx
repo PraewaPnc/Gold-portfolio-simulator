@@ -17,6 +17,10 @@ import { CagrFormula } from "@/components/CagrFormula";
 import { DataBadge } from "@/components/DataBadge";
 import { TrailingTable } from "@/components/home/TrailingTable";
 import { InfoHint } from "@/components/InfoHint";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { DcaSection } from "@/components/sections/DcaSection";
+import { ReferenceSection } from "@/components/sections/ReferenceSection";
+import { SimulationSection } from "@/components/sections/SimulationSection";
 import { dataRange, dataYears, formatThaiDate } from "@/lib/data";
 
 const GOLD_ROLES = [
@@ -32,7 +36,7 @@ export default function HomePage() {
       {/* ---------- Hero ---------- */}
       {/* ภาพเป็นพื้นหลังเต็ม section (หลุดจากกรอบ max-w-6xl ของหน้าที่เหลือไปเต็มความกว้างจอ)
           ข้อความลอยทับด้านบน จึงต้องมี scrim ไล่สีเข้มด้านซ้ายให้อ่านออกชัดเจนตลอดที่ข้อความอยู่ */}
-      <section className="relative flex min-h-[480px] items-center overflow-hidden sm:min-h-[640px]">
+      <section className="relative flex min-h-[100dvh] items-center overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <Image
             src="/gold-bars.jpg"
@@ -60,29 +64,29 @@ export default function HomePage() {
             className="pointer-events-none absolute -left-20 top-1/4 h-[380px] w-[380px] rounded-full bg-gold/15 blur-[120px]"
             aria-hidden
           />
-          <div className="relative max-w-2xl">
-            <p className="eyebrow flex items-center gap-1.5 text-[12.5px]">
-              <Sparkles size={14} aria-hidden /> Gold Allocation Case Study
+          <div className="relative max-w-[42rem] lg:max-w-3xl">
+            <p className="eyebrow flex items-center gap-2 text-[13px] sm:text-[14px]">
+              <Sparkles size={15} aria-hidden /> Gold Allocation Case Study
             </p>
-            <h1 className="mt-3.5 font-display text-4xl font-semibold tracking-[-0.015em] leading-[1.22] sm:text-[46px]">
+            <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight leading-[1.2] sm:text-5xl lg:text-[56px] lg:leading-[1.15]">
               ถ้ามีเงิน 1 ล้านบาท ควรลงทุนทองคำเท่าไร?
             </h1>
-            <p className="mt-4 text-[15px] font-normal leading-[1.8] text-ink-dim/90">
+            <p className="mt-6 text-[15px] font-normal leading-[1.8] text-ink-dim/90 sm:text-base lg:text-[17.5px] lg:leading-[1.85]">
               เราใช้ข้อมูลจริงย้อนหลัง 20 ปีของทองคำ หุ้นสหรัฐฯ (S&amp;P 500)
               และพันธบัตรรัฐบาลสหรัฐฯ เพื่อวิเคราะห์ผลตอบแทน ความผันผวน และความสัมพันธ์ระหว่างสินทรัพย์
               จากนั้นจำลองพอร์ตด้วย Monte Carlo Simulation
               เพื่อประเมินว่าสัดส่วนทองคำที่แตกต่างกันส่งผลต่อความเสี่ยงและผลลัพธ์ของพอร์ตอย่างไร
               ภายใต้ลักษณะของผู้ลงทุนแต่ละแบบ
             </p>
-            <div className="mt-5">
+            <div className="mt-7">
               <DataBadge />
             </div>
 
             <div className="mt-8 flex flex-wrap items-center gap-3.5">
-              <Link href="/simulation" className="btn-luxury-primary">
+              <Link href="#simulation" className="btn-luxury-primary">
                 เริ่มจำลองพอร์ต <ArrowRight size={15} aria-hidden />
               </Link>
-              <Link href="/reference" className="btn-luxury-secondary">
+              <Link href="#reference" className="btn-luxury-secondary">
                 ดูข้อมูลย้อนหลัง <ArrowRight size={15} aria-hidden />
               </Link>
             </div>
@@ -148,57 +152,97 @@ export default function HomePage() {
           </h2>
           <TrailingTable />
 
-          <p className="mt-2.5 text-[11.5px] leading-relaxed text-ink-faint">
-            คำนวณจากข้อมูลรายเดือนถึง {formatThaiDate(dataRange.end)}  · ช่วง &ldquo;ทั้งหมด&rdquo; คือ {formatThaiDate(dataRange.start)} – {formatThaiDate(dataRange.end)} ({dataYears} ปี) ·
-            ความผันผวนของช่วง 1 ปีคำนวณจากผลตอบแทนเพียง 12 เดือน จึงมีความคลาดเคลื่อนสูง
-          </p>
+          <ScrollReveal delay={0.1}>
+            <p className="mt-2.5 text-[11.5px] leading-relaxed text-ink-faint">
+              คำนวณจากข้อมูลรายเดือนถึง {formatThaiDate(dataRange.end)}  · ช่วง &ldquo;ทั้งหมด&rdquo; คือ {formatThaiDate(dataRange.start)} – {formatThaiDate(dataRange.end)} ({dataYears} ปี) ·
+              ความผันผวนของช่วง 1 ปีคำนวณจากผลตอบแทนเพียง 12 เดือน จึงมีความคลาดเคลื่อนสูง
+            </p>
+          </ScrollReveal>
         </section>
 
         {/* ---------- โครงสร้างเคสศึกษา ---------- */}
         <section className="mt-12">
-          <h2 className="font-display text-xl font-semibold">เคสศึกษาแบ่งเป็น 3 ส่วน</h2>
+          <ScrollReveal>
+            <h2 className="font-display text-xl font-semibold">เคสศึกษาแบ่งเป็น 3 ส่วน</h2>
+          </ScrollReveal>
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Link href="/reference" className="panel panel-interactive group p-5">
-              <BarChart3 size={18} className="text-gold" aria-hidden />
-              <h3 className="mt-3 font-display text-lg font-semibold">ข้อมูลย้อนหลัง</h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-ink-dim">
-                กราฟราคาย้อนหลังของทั้ง 3 สินทรัพย์ปรับฐานเป็น index 100 เพื่อเทียบทิศทางได้ในกราฟเดียว
-                พร้อมตารางผลตอบแทน ความผันผวน และ correlation matrix
-                รวมถึงระบุแหล่งข้อมูลของแต่ละสินทรัพย์อย่างชัดเจน
-              </p>
-              <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gold-light">
-                ดูข้อมูล <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
-              </span>
-            </Link>
+            <ScrollReveal delay={0.1}>
+              <Link href="#reference" className="panel panel-interactive group flex h-full flex-col p-5">
+                <BarChart3 size={18} className="text-gold" aria-hidden />
+                <h3 className="mt-3 font-display text-lg font-semibold">ข้อมูลย้อนหลัง</h3>
+                <p className="mt-2 flex-1 text-[13px] leading-relaxed text-ink-dim">
+                  กราฟราคาย้อนหลังของทั้ง 3 สินทรัพย์ปรับฐานเป็น index 100 เพื่อเทียบทิศทางได้ในกราฟเดียว
+                  พร้อมตารางผลตอบแทน ความผันผวน และ correlation matrix
+                  รวมถึงระบุแหล่งข้อมูลของแต่ละสินทรัพย์อย่างชัดเจน
+                </p>
+                <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gold-light">
+                  ดูข้อมูล <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </span>
+              </Link>
+            </ScrollReveal>
 
-            <Link href="/simulation" className="panel panel-interactive group p-5">
-              <TrendingUp size={18} className="text-gold" aria-hidden />
-              <h3 className="mt-3 font-display text-lg font-semibold">จำลองพอร์ต</h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-ink-dim">
-                เลือก persona ปรับระยะเวลาลงทุน ระดับความเสี่ยง สำรองเงินสด และสัดส่วนทองคำ
-                แล้วดูผลลัพธ์ผ่าน Monte Carlo simulation 1,200 รอบ — fan chart รายปี
-                การกระจายมูลค่าปลายทาง และตารางเปรียบเทียบ 4 persona
-              </p>
-              <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gold-light">
-                เริ่มจำลอง <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
-              </span>
-            </Link>
+            <ScrollReveal delay={0.2}>
+              <Link href="#simulation" className="panel panel-interactive group flex h-full flex-col p-5">
+                <TrendingUp size={18} className="text-gold" aria-hidden />
+                <h3 className="mt-3 font-display text-lg font-semibold">จำลองพอร์ต</h3>
+                <p className="mt-2 flex-1 text-[13px] leading-relaxed text-ink-dim">
+                  เลือก persona ปรับระยะเวลาลงทุน ระดับความเสี่ยง สำรองเงินสด และสัดส่วนทองคำ
+                  แล้วดูผลลัพธ์ผ่าน Monte Carlo simulation 1,200 รอบ — fan chart รายปี
+                  การกระจายมูลค่าปลายทาง และตารางเปรียบเทียบ 4 persona
+                </p>
+                <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gold-light">
+                  เริ่มจำลอง <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </span>
+              </Link>
+            </ScrollReveal>
 
-            <Link href="/dca" className="panel panel-interactive group p-5">
-              <Repeat size={18} className="text-gold" aria-hidden />
-              <h3 className="mt-3 font-display text-lg font-semibold">DCA ทองคำ</h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-ink-dim">
-                กำหนดเงินเริ่มต้น เงินที่ลงเพิ่มทุกเดือน และระยะเวลาลงทุน
-                แล้วย้อนดูบนราคาทองจริงรายเดือนว่าเงินที่ใส่ไปสะสมเท่าไร
-                มูลค่ารวมเป็นเท่าไร และต้นทุนเฉลี่ยต่อออนซ์อยู่ตรงไหน
-              </p>
-              <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gold-light">
-                ลองคำนวณ <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
-              </span>
-            </Link>
+            <ScrollReveal delay={0.3}>
+              <Link href="#dca" className="panel panel-interactive group flex h-full flex-col p-5">
+                <Repeat size={18} className="text-gold" aria-hidden />
+                <h3 className="mt-3 font-display text-lg font-semibold">DCA ทองคำ</h3>
+                <p className="mt-2 flex-1 text-[13px] leading-relaxed text-ink-dim">
+                  กำหนดเงินเริ่มต้น เงินที่ลงเพิ่มทุกเดือน และระยะเวลาลงทุน
+                  แล้วย้อนดูบนราคาทองจริงรายเดือนว่าเงินที่ใส่ไปสะสมเท่าไร
+                  มูลค่ารวมเป็นเท่าไร และต้นทุนเฉลี่ยต่อออนซ์อยู่ตรงไหน
+                </p>
+                <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gold-light">
+                  ลองคำนวณ <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </span>
+              </Link>
+            </ScrollReveal>
           </div>
         </section>
       </div>
+
+      <ScrollReveal>
+        <div className="h-px bg-line/80 my-8 mx-auto max-w-6xl" />
+      </ScrollReveal>
+
+      <section id="reference" className="scroll-mt-24">
+        <ScrollReveal>
+          <ReferenceSection />
+        </ScrollReveal>
+      </section>
+
+      <ScrollReveal>
+        <div className="h-px bg-line/80 my-8 mx-auto max-w-6xl" />
+      </ScrollReveal>
+
+      <section id="simulation" className="scroll-mt-24">
+        <ScrollReveal>
+          <SimulationSection />
+        </ScrollReveal>
+      </section>
+
+      <ScrollReveal>
+        <div className="h-px bg-line/80 my-8 mx-auto max-w-6xl" />
+      </ScrollReveal>
+
+      <section id="dca" className="scroll-mt-24 mb-16">
+        <ScrollReveal>
+          <DcaSection />
+        </ScrollReveal>
+      </section>
     </div>
   );
 }

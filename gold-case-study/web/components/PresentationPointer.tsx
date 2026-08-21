@@ -2,7 +2,37 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Sparkles, Target } from "lucide-react";
+import { Target } from "lucide-react";
+
+const LaserPointerIcon = ({ size = 20, className = "" }: { size?: number | string; className?: string }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.75"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    {/* Body */}
+    <path d="M4 16.5l3.5-3.5 3 3L7 19.5a2.12 2.12 0 0 1-3-3z" fill="currentColor" stroke="none" />
+    <path d="M5.5 16.5l2-2" stroke="var(--bg, #1B1815)" strokeWidth="1" />
+    {/* Beam */}
+    <path d="M9 11.5l4-4" />
+    {/* Dot */}
+    <circle cx="16" cy="4.5" r="1.5" fill="currentColor" stroke="none" />
+    {/* Rays */}
+    <path d="M16 0.5v2" />
+    <path d="M20 4.5h-2" />
+    <path d="M19 1.5l-1.5 1.5" />
+    <path d="M14 6.5l1.5-1.5" />
+    <path d="M12 4.5h2" />
+    <path d="M16 8.5v-2" />
+  </svg>
+);
 
 interface Ripple {
   id: number;
@@ -211,27 +241,17 @@ export function PresentationPointer() {
           onClick={togglePointer}
           aria-label={enabled ? "ปิดโหมด Presentation Pointer" : "เปิดโหมด Presentation Pointer (คีย์ลัด P)"}
           title={enabled ? "ปิด Laser Pointer (กด P)" : "เปิด Laser Pointer สำหรับพรีเซนต์ (กด P)"}
-          className={`group flex items-center gap-2 rounded-full px-3.5 py-2 text-[12px] font-medium shadow-[0_4px_24px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-200 active:scale-95 ${
+          className={`group flex items-center justify-center rounded-full p-2.5 shadow-[0_4px_24px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-200 active:scale-95 ${
             enabled
-              ? "border border-gold bg-gradient-to-r from-gold-light via-gold to-[#B38D1B] font-semibold text-[#14120F] shadow-[0_0_20px_rgba(201,162,39,0.45)]"
-              : "border border-line/80 bg-panel/90 text-ink-dim hover:border-gold/60 hover:bg-panel2 hover:text-ink"
+              ? "border border-gold bg-gradient-to-r from-gold-light via-gold to-[#B38D1B] shadow-[0_0_20px_rgba(201,162,39,0.45)]"
+              : "border border-line/80 bg-panel/90 hover:border-gold/60 hover:bg-panel2"
           }`}
         >
           {enabled ? (
-            <Target size={14} className="animate-spin text-[#14120F] [animation-duration:8s]" aria-hidden />
+            <LaserPointerIcon size={18} className="text-[#14120F]" />
           ) : (
-            <Sparkles size={14} className="text-gold transition-transform duration-200 group-hover:scale-110" aria-hidden />
+            <LaserPointerIcon size={18} className="text-gold transition-transform duration-200 group-hover:scale-110" />
           )}
-          <span>{enabled ? "Pointer ON" : "Pointer"}</span>
-          <span
-            className={`rounded px-1.5 py-0.5 font-mono text-[10px] ${
-              enabled
-                ? "bg-[#14120F]/20 text-[#14120F]"
-                : "border border-line/60 bg-bg/50 text-ink-faint"
-            }`}
-          >
-            P
-          </span>
         </button>
       </div>
     </>

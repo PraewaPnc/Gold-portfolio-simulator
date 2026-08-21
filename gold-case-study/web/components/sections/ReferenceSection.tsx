@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { ArrowRight, Database, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 
@@ -17,15 +16,13 @@ import {
 } from "@/lib/data";
 import { ASSETS, type AssetKey } from "@/lib/types";
 
-export const metadata: Metadata = { title: "ข้อมูลย้อนหลัง" };
-
 const ASSET_DOT: Record<AssetKey, string> = {
   gold: "bg-gold",
   equity: "bg-equity",
   bond: "bg-bond",
 };
 
-export default function ReferencePage() {
+export function ReferenceSection() {
   const { series } = priceHistory;
 
   return (
@@ -125,18 +122,10 @@ export default function ReferencePage() {
                       {src.priceSource.rows.toLocaleString("th-TH")} แถว)
                     </dd>
                   </div>
-                  <div>
-                    <dt className="label-caps">วิธีคำนวณ</dt>
-                    <dd className="mt-0.5 leading-relaxed text-ink-dim">{src.method}</dd>
-                  </div>
                 </dl>
 
-                <p className="mt-3 border-t border-line pt-2.5 text-[11.5px] leading-relaxed text-ink-faint">
-                  {src.notes}
-                </p>
-
-                <span className="mt-3 inline-flex items-center gap-1.5 text-[12.5px] text-gold-light">
-                  ดูตารางข้อมูลทั้งหมด
+                <span className="mt-4 inline-flex items-center gap-1.5 text-[12.5px] text-gold-light border-t border-line/60 pt-3">
+                  ดูวิธีคำนวณและข้อมูลทั้งหมด
                   <ArrowRight
                     size={13}
                     className="transition-transform group-hover:translate-x-0.5"

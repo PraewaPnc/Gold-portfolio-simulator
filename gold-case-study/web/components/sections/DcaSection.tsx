@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Info, Repeat } from "lucide-react";
 import Link from "next/link";
 
@@ -6,9 +5,7 @@ import { DataBadge } from "@/components/DataBadge";
 import { DcaSimulator } from "@/components/dca/DcaSimulator";
 import { PriceBasis } from "@/components/dca/PriceBasis";
 
-export const metadata: Metadata = { title: "DCA ทองคำ" };
-
-export default function DcaPage() {
+export function DcaSection() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <header className="max-w-3xl">
@@ -71,7 +68,7 @@ export default function DcaPage() {
         </ul>
         <p className="mt-4 border-t border-line pt-3 text-[12px] leading-relaxed text-ink-faint">
           อยากดูภาพความน่าจะเป็นในอนาคตแทนการย้อนอดีต ให้ไปที่หน้า{" "}
-          <Link href="/simulation" className="text-gold-light underline-offset-2 hover:underline">
+          <Link href="/#simulation" className="text-gold-light underline-offset-2 hover:underline">
             จำลองพอร์ต
           </Link>{" "}
           ซึ่งใช้ Monte Carlo · เคสศึกษานี้จัดทำเพื่อการศึกษาเท่านั้น ไม่ใช่คำแนะนำการลงทุน

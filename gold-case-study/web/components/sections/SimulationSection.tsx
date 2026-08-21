@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Info, Sparkles } from "lucide-react";
 import Link from "next/link";
 
@@ -7,9 +6,7 @@ import { ModelInputs } from "@/components/simulation/ModelInputs";
 import { Simulator } from "@/components/simulation/Simulator";
 import { assetStats, dataRange, dataYears } from "@/lib/data";
 
-export const metadata: Metadata = { title: "จำลองพอร์ต" };
-
-export default function SimulationPage() {
+export function SimulationSection() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <header className="max-w-3xl">
@@ -88,7 +85,7 @@ export default function SimulationPage() {
             <div>
               <strong className="font-medium text-ink">ดัชนีพันธบัตร:</strong>{" "}
               สร้างจากอัตราผลตอบแทน 10 ปี (duration/convexity) ไม่ใช่มูลค่าหน่วยลงทุนจริง — ดูที่{" "}
-              <Link href="/reference" className="text-gold-light underline-offset-2 hover:underline">
+              <Link href="/#reference" className="text-gold-light underline-offset-2 hover:underline">
                 หน้าข้อมูลย้อนหลัง
               </Link>
             </div>

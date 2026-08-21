@@ -21,7 +21,7 @@ export function ModelInputs() {
       <div className="flex items-center justify-between gap-3">
         <span className="label-caps">Input จากข้อมูลจริง ({unitLabel(currency)})</span>
         <Link
-          href="/reference"
+          href="/#reference"
           className="shrink-0 text-[11.5px] text-gold-light underline-offset-2 hover:underline"
         >
           ดูที่มาของตัวเลข →

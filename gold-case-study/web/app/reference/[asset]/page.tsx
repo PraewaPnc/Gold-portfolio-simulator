@@ -48,8 +48,8 @@ export default function AssetDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-12">
       <Link
-        href="/reference"
-        className="inline-flex items-center gap-1.5 text-[13px] text-ink-dim transition-colors hover:text-gold-light"
+        href="/#reference"
+        className="group mb-6 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-ink-dim transition-colors hover:text-ink"
       >
         <ArrowLeft size={14} aria-hidden /> กลับไปหน้าข้อมูลย้อนหลัง
       </Link>
