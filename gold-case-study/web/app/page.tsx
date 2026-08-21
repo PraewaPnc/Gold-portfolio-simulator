@@ -55,14 +55,19 @@ export default function HomePage() {
         </div>
 
         <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-          <div className="max-w-2xl">
-            <p className="eyebrow flex items-center gap-1.5 text-[13px]">
-              <Sparkles size={15} aria-hidden /> Gold Allocation Case Study
+          {/* แสงเรืองรองสีทองพื้นหลัง (Ambient Gold Light) */}
+          <div
+            className="pointer-events-none absolute -left-20 top-1/4 h-[380px] w-[380px] rounded-full bg-gold/15 blur-[120px]"
+            aria-hidden
+          />
+          <div className="relative max-w-2xl">
+            <p className="eyebrow flex items-center gap-1.5 text-[12.5px]">
+              <Sparkles size={14} aria-hidden /> Gold Allocation Case Study
             </p>
-            <h1 className="mt-3 font-display text-4xl font-semibold leading-tight sm:text-[48px]">
+            <h1 className="mt-3.5 font-display text-4xl font-semibold tracking-[-0.015em] leading-[1.22] sm:text-[46px]">
               ถ้ามีเงิน 1 ล้านบาท ควรลงทุนทองคำเท่าไร?
             </h1>
-            <p className="mt-4 text-[15px] leading-relaxed text-ink-dim">
+            <p className="mt-4 text-[15px] font-normal leading-[1.8] text-ink-dim/90">
               เราใช้ข้อมูลจริงย้อนหลัง 20 ปีของทองคำ หุ้นสหรัฐฯ (S&amp;P 500)
               และพันธบัตรรัฐบาลสหรัฐฯ เพื่อวิเคราะห์ผลตอบแทน ความผันผวน และความสัมพันธ์ระหว่างสินทรัพย์
               จากนั้นจำลองพอร์ตด้วย Monte Carlo Simulation
@@ -73,21 +78,11 @@ export default function HomePage() {
               <DataBadge />
             </div>
 
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link
-                href="/simulation"
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-b from-gold-light
-                           via-gold to-[#a8811d] px-4 py-2.5 text-sm font-medium text-bg
-                           shadow-[inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-1px_2px_rgba(0,0,0,0.25),0_2px_6px_rgba(0,0,0,0.35)]
-                           transition-[filter] hover:brightness-110"
-              >
+            <div className="mt-8 flex flex-wrap items-center gap-3.5">
+              <Link href="/simulation" className="btn-luxury-primary">
                 เริ่มจำลองพอร์ต <ArrowRight size={15} aria-hidden />
               </Link>
-              <Link
-                href="/reference"
-                className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm
-                           text-ink-dim backdrop-blur-sm transition-colors hover:border-gold hover:text-ink"
-              >
+              <Link href="/reference" className="btn-luxury-secondary">
                 ดูข้อมูลย้อนหลัง <ArrowRight size={15} aria-hidden />
               </Link>
             </div>
@@ -96,51 +91,40 @@ export default function HomePage() {
       </section>
 
       {/* ---------- บทบาทของทองคำในพอร์ต ---------- */}
-      <section className="bg-panel/30">
-        <div className="mx-auto max-w-6xl px-4 pb-8 pt-12 sm:px-6 sm:pb-10 sm:pt-16">
+      <section className="relative overflow-hidden bg-panel/30 ambient-glow-gold">
+        {/* แสง Ambient Glow ศูนย์กลาง */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 h-[300px] w-[500px] rounded-full bg-gold/10 blur-[100px]"
+          aria-hidden
+        />
+        <div className="relative mx-auto max-w-6xl px-4 pb-8 pt-12 sm:px-6 sm:pb-10 sm:pt-16">
           <div className="text-center">
             <p className="eyebrow">The Role of Gold</p>
             <h2 className="mx-auto mt-2 max-w-xl font-display text-2xl font-semibold leading-snug sm:text-[26px]">
               ไม่ใช่ตัวเร่งผลตอบแทน แต่เป็นตัวช่วยปกป้องพอร์ต
             </h2>
 
-            {/* เส้นคั่นลายไทยประดับ — เส้นเรียวสอบปลายทั้งสองข้าง ไล่สีจางที่ปลายเข้มตรงกลาง
-                คั่นกลางด้วยดาวกระพริบและจุดเล็ก ๆ */}
-            <div className="mx-auto mt-5 flex max-w-2xl items-center gap-2.5" aria-hidden>
-              <svg viewBox="0 0 500 24" preserveAspectRatio="none" className="h-3 flex-1">
-                <defs>
-                  <linearGradient id="divider-fade-l" x1="0" x2="1" y1="0" y2="0">
-                    <stop offset="0%" stopColor="#C9A227" stopOpacity="0" />
-                    <stop offset="70%" stopColor="#E8C766" stopOpacity="0.85" />
-                    <stop offset="100%" stopColor="#E8C766" />
-                  </linearGradient>
-                </defs>
-                <path d="M0,12 Q330,3 494,12 Q330,21 0,12 Z" fill="url(#divider-fade-l)" />
-              </svg>
-              <span className="h-1 w-1 shrink-0 rotate-45 bg-gold/70" />
-              <Sparkle size={16} className="shrink-0 fill-gold text-gold" />
-              <span className="h-1 w-1 shrink-0 rotate-45 bg-gold/70" />
-              <svg viewBox="0 0 500 24" preserveAspectRatio="none" className="h-3 flex-1">
-                <defs>
-                  <linearGradient id="divider-fade-r" x1="1" x2="0" y1="0" y2="0">
-                    <stop offset="0%" stopColor="#C9A227" stopOpacity="0" />
-                    <stop offset="70%" stopColor="#E8C766" stopOpacity="0.85" />
-                    <stop offset="100%" stopColor="#E8C766" />
-                  </linearGradient>
-                </defs>
-                <path d="M500,12 Q170,3 6,12 Q170,21 500,12 Z" fill="url(#divider-fade-r)" />
-              </svg>
-            </div>
+            {/* Minimalist Divider */}
+            <div className="mx-auto mt-6 h-[1px] max-w-[200px] bg-gradient-to-r from-transparent via-gold/40 to-transparent" aria-hidden />
           </div>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {GOLD_ROLES.map((role) => (
-              <div key={role.title} className="panel px-5 py-6 text-center">
-                <div className="mx-auto flex h-11 w-11 items-center justify-center">
-                  <role.icon size={30} className="text-gold" aria-hidden />
+              <div
+                key={role.title}
+                className="panel group relative flex flex-col items-center px-5 py-6 text-center transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.6),0_0_24px_rgba(201,162,39,0.16)]"
+              >
+                {/* แท่นวางไอคอนเรืองแสง (Glassmorphic Icon Pod) */}
+                <div className="relative flex h-12 w-12 items-center justify-center rounded-full border border-gold/25 bg-gold/5 shadow-[0_0_16px_rgba(201,162,39,0.12)] transition-all duration-300 group-hover:scale-110 group-hover:border-gold/50 group-hover:bg-gold/15 group-hover:shadow-[0_0_24px_rgba(201,162,39,0.3)]">
+                  <role.icon size={24} className="text-gold transition-colors duration-300 group-hover:text-gold-light" aria-hidden />
                 </div>
-                <h3 className="mt-4 font-display text-[15px] font-semibold">{role.title}</h3>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-ink-dim">{role.body}</p>
+
+                <h3 className="mt-4 font-display text-[15px] font-semibold text-ink transition-colors duration-300 group-hover:text-gold-light">
+                  {role.title}
+                </h3>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-ink-dim transition-colors duration-300 group-hover:text-ink/90">
+                  {role.body}
+                </p>
               </div>
             ))}
           </div>

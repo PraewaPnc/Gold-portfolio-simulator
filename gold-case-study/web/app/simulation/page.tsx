@@ -39,52 +39,73 @@ export default function SimulationPage() {
       </div>
 
       {/* ---- ข้อจำกัดของแบบจำลอง ---- */}
-      <section className="panel mt-6 p-5">
-        <h2 className="flex items-center gap-2 text-sm font-medium text-ink">
-          <Info size={15} className="text-gold" aria-hidden />
-          ข้อจำกัดของแบบจำลองที่ควรรู้ก่อนตีความผล
-        </h2>
-        <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[12.5px] leading-relaxed text-ink-dim">
-          <li>
-            แบบจำลองสมมติว่าผลตอบแทนรายปีมีการแจกแจงแบบปกติและค่าสถิติคงที่ตลอดช่วงเวลา
-            ในความเป็นจริงตลาดมีช่วงวิกฤตที่ผลตอบแทนติดลบรุนแรงกว่าและสหสัมพันธ์เปลี่ยนไป
-          </li>
-          <li>
-            ค่าสถิติประมาณจากข้อมูลย้อนหลัง {dataYears} ปี ({dataRange.months} เดือน)
-            ซึ่งเป็นช่วงที่ทั้งทองคำและหุ้นสหรัฐฯ ให้ผลตอบแทนสูงเป็นพิเศษ
-            ผลในอนาคตอาจต่างไปอย่างมีนัยสำคัญ
-          </li>
-          <li>
-            การจำลองไม่ได้รวมค่าธรรมเนียมการซื้อขาย ค่าบริหารจัดการกองทุน ภาษี
-            การปรับสัดส่วนพอร์ต (rebalancing) และเงินลงทุนเพิ่มระหว่างทาง
-          </li>
-          <li>
-            สำรองเงินสดคิดผลตอบแทนคงที่ที่อัตราปราศจากความเสี่ยงของสกุลที่เลือกตลอดช่วงจำลอง
-            (ดูค่าที่ใช้จริงในแถบ input ด้านบน) และไม่ได้หักเงินเฟ้อ
-            ในความเป็นจริงอัตราดอกเบี้ยเงินฝากเปลี่ยนตามเวลาและมักต่ำกว่าเงินเฟ้อ
-            อำนาจซื้อของเงินก้อนนี้จึงลดลงได้แม้ตัวเลขจะไม่ติดลบ · {assetStats.meta.riskFreeRateNote}
-          </li>
-          <li>
-            ดัชนีผลตอบแทนรวมของพันธบัตรสร้างขึ้นจากอัตราผลตอบแทน 10 ปี ไม่ใช่มูลค่าหน่วยลงทุนจริง
-            ของกองทุนพันธบัตร — ดูรายละเอียดที่หน้า{" "}
-            <Link href="/reference" className="text-gold-light underline-offset-2 hover:underline">
-              ข้อมูลย้อนหลัง
-            </Link>
-          </li>
-          <li>
-            ผลลัพธ์ใช้ตัวเลขสุ่มที่กำหนด seed ไว้ จึงทำซ้ำได้เหมือนเดิมทุกครั้ง
-            แต่ก็หมายความว่าตัวเลขที่เห็นเป็นเพียงหนึ่งชุดตัวอย่างจากความเป็นไปได้ทั้งหมด
-          </li>
-          <li>
-            ฐานเงินบาทจำลองความเสี่ยงค่าเงินผ่านค่าสถิติที่ประมาณจากอดีตเท่านั้น
-            ไม่ได้จำลองอัตราแลกเปลี่ยนเป็นตัวแปรแยก และไม่รวมต้นทุนการแปลงสกุลเงิน
-            หรือทางเลือกในการป้องกันความเสี่ยงค่าเงิน (hedging)
-          </li>
-        </ul>
-        <p className="mt-4 border-t border-line pt-3 text-[12px] leading-relaxed text-ink-faint">
-          เคสศึกษานี้จัดทำเพื่อการศึกษาเท่านั้น ไม่ใช่คำแนะนำการลงทุน
-          ผู้ลงทุนควรศึกษาข้อมูลและปรึกษาผู้แนะนำการลงทุนที่ได้รับใบอนุญาตก่อนตัดสินใจ
-        </p>
+      <section className="panel mt-8 p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
+          <h2 className="flex items-center gap-2 font-display text-base font-semibold text-ink">
+            <Info size={16} className="text-gold" aria-hidden />
+            ข้อจำกัดและสมมติฐานของแบบจำลอง
+          </h2>
+          <span className="font-mono text-[11px] text-ink-faint">
+            ข้อมูลอ้างอิง {dataYears} ปี ({dataRange.months} เดือน)
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="flex gap-2.5 rounded-lg border border-line/60 bg-panel2/40 p-3 text-[12px] leading-relaxed text-ink-dim">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold/70" aria-hidden />
+            <div>
+              <strong className="font-medium text-ink">สมมติฐานสถิติ (Normal Distribution):</strong>{" "}
+              แบบจำลองสมมติว่าผลตอบแทนรายปีมีการแจกแจงแบบปกติและค่าสถิติคงที่ ในความเป็นจริงช่วงวิกฤตอาจมีผลตอบแทนติดลบรุนแรงกว่า
+            </div>
+          </div>
+
+          <div className="flex gap-2.5 rounded-lg border border-line/60 bg-panel2/40 p-3 text-[12px] leading-relaxed text-ink-dim">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold/70" aria-hidden />
+            <div>
+              <strong className="font-medium text-ink">ช่วงเวลาอ้างอิง:</strong>{" "}
+              ประมาณการจากสถิติ {dataYears} ปีที่ผ่านมา ซึ่งเป็นช่วงที่ทองคำและหุ้นสหรัฐฯ ให้ผลตอบแทนสูงเป็นพิเศษ ผลในอนาคตอาจต่างไปอย่างมีนัยสำคัญ
+            </div>
+          </div>
+
+          <div className="flex gap-2.5 rounded-lg border border-line/60 bg-panel2/40 p-3 text-[12px] leading-relaxed text-ink-dim">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold/70" aria-hidden />
+            <div>
+              <strong className="font-medium text-ink">ค่าธรรมเนียมและภาษี:</strong>{" "}
+              ไม่ได้รวมค่าธรรมเนียมซื้อขาย, ค่าบริหารกองทุน, ภาษี, การปรับสัดส่วนพอร์ต (Rebalancing) และเงินลงทุนเพิ่มระหว่างทาง
+            </div>
+          </div>
+
+          <div className="flex gap-2.5 rounded-lg border border-line/60 bg-panel2/40 p-3 text-[12px] leading-relaxed text-ink-dim">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold/70" aria-hidden />
+            <div>
+              <strong className="font-medium text-ink">สำรองเงินสด:</strong>{" "}
+              คิดผลตอบแทนคงที่ที่อัตราดอกเบี้ยปราศจากความเสี่ยง ({assetStats.meta.riskFreeRateNote}) และไม่ได้หักผลกระทบจากเงินเฟ้อ
+            </div>
+          </div>
+
+          <div className="flex gap-2.5 rounded-lg border border-line/60 bg-panel2/40 p-3 text-[12px] leading-relaxed text-ink-dim">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold/70" aria-hidden />
+            <div>
+              <strong className="font-medium text-ink">ดัชนีพันธบัตร:</strong>{" "}
+              สร้างจากอัตราผลตอบแทน 10 ปี (duration/convexity) ไม่ใช่มูลค่าหน่วยลงทุนจริง — ดูที่{" "}
+              <Link href="/reference" className="text-gold-light underline-offset-2 hover:underline">
+                หน้าข้อมูลย้อนหลัง
+              </Link>
+            </div>
+          </div>
+
+          <div className="flex gap-2.5 rounded-lg border border-line/60 bg-panel2/40 p-3 text-[12px] leading-relaxed text-ink-dim">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold/70" aria-hidden />
+            <div>
+              <strong className="font-medium text-ink">ความเสี่ยงค่าเงิน &amp; Hedging:</strong>{" "}
+              ฐานเงินบาทจำลองจากสถิติอัตราแลกเปลี่ยนในอดีต ไม่ได้รวมต้นทุนแปลงสกุลเงินหรือการป้องกันความเสี่ยง (FX Hedging)
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-lg border border-line/50 bg-bg/40 px-3.5 py-2.5 text-[11.5px] leading-relaxed text-ink-faint">
+          <span className="font-medium text-ink-dim">⚠️ คำเตือนความเสี่ยง:</span> เคสศึกษานี้จัดทำขึ้นเพื่อการศึกษาและการวิเคราะห์เชิงสถิติเท่านั้น ไม่ถือเป็นคำแนะนำการลงทุน ผู้ลงทุนควรศึกษาข้อมูลและทำความเข้าใจความเสี่ยงก่อนตัดสินใจ
+        </div>
       </section>
     </div>
   );

@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { ChartTooltip } from "@/components/ChartTooltip";
 import { InfoHint } from "@/components/InfoHint";
 import {
   convertAmount,
@@ -174,7 +175,12 @@ export function DcaSimulator() {
         </aside>
 
         {/* ================= Main ================= */}
-        <div className="min-w-0 p-5 sm:p-6">
+        <div className="relative min-w-0 p-5 sm:p-6 ambient-glow-center overflow-hidden">
+          {/* แสง Ambient Gold Glow */}
+          <div
+            className="pointer-events-none absolute right-6 top-10 h-[360px] w-[360px] rounded-full bg-gold/12 blur-[110px]"
+            aria-hidden
+          />
           {/* ---- Stat cards ---- */}
           <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
@@ -195,7 +201,7 @@ export function DcaSimulator() {
                 tone: positive ? "gold" : "danger",
               },
               {
-                label: "ผลตอบแทนต่อปี (IRR)",
+                label: "ผลตอบแทนรายปี (IRR)",
                 value: pct(result.irr),
                 sub: "ถ่วงน้ำหนักด้วยเงินและเวลา",
                 tone: result.irr >= 0 ? "ink" : "danger",
@@ -263,37 +269,49 @@ export function DcaSimulator() {
                   width={58}
                 />
                 <Tooltip
-                  cursor={{ stroke: "#766F60", strokeDasharray: "3 3" }}
+                  cursor={{ stroke: "#C9A227", strokeWidth: 1, strokeDasharray: "3 3", strokeOpacity: 0.6 }}
                   content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null;
                     const d = payload[0]?.payload as { invested: number; value: number };
                     const gain = d.value - d.invested;
                     const gainPct = d.invested > 0 ? gain / d.invested : 0;
                     return (
-                      <div className="rounded-lg border border-line bg-panel px-3 py-2.5 font-mono text-xs text-ink shadow-lg">
-                        <div className="mb-1.5 text-ink-faint">
-                          {formatThaiMonthYear(String(label))}
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span style={{ color: INVESTED }}>เงินที่ลงทุน</span>
-                          <span className="tabular">{money(d.invested)}</span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span style={{ color: GOLD_LIGHT }}>มูลค่ารวม</span>
-                          <span className="tabular">{money(d.value)}</span>
-                        </div>
-                        <div className="mt-1 flex justify-between gap-4 border-t border-line pt-1">
-                          <span className="text-ink-faint">
-                            {gain >= 0 ? "กำไร" : "ขาดทุน"}
-                          </span>
-                          <span
-                            className="tabular"
-                            style={{ color: gain >= 0 ? GOLD_LIGHT : DANGER }}
-                          >
-                            {money(Math.abs(gain))} ({pctSigned(gainPct)})
-                          </span>
-                        </div>
-                      </div>
+                      <ChartTooltip
+                        title={formatThaiMonthYear(String(label))}
+                        badge={{
+                          label: gain >= 0 ? "กำไร" : "ขาดทุน",
+                          color: gain >= 0 ? GOLD_LIGHT : DANGER,
+                          bg: gain >= 0 ? "rgba(232, 199, 102, 0.12)" : "rgba(178, 90, 74, 0.15)",
+                        }}
+                        items={[
+                          {
+                            key: "invested",
+                            label: "เงินที่ลงทุน",
+                            value: `${money(d.invested)} ${unitLabel(currency)}`,
+                            color: INVESTED,
+                          },
+                          {
+                            key: "value",
+                            label: "มูลค่ารวม",
+                            value: `${money(d.value)} ${unitLabel(currency)}`,
+                            color: GOLD_LIGHT,
+                            isStrong: true,
+                          },
+                        ]}
+                        footer={
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-ink-dim">
+                              {gain >= 0 ? "กำไรสะสม" : "ขาดทุนสะสม"}
+                            </span>
+                            <span
+                              className="font-semibold tabular"
+                              style={{ color: gain >= 0 ? GOLD_LIGHT : DANGER }}
+                            >
+                              {gain >= 0 ? "+" : ""}{money(gain)} ({pctSigned(gainPct)})
+                            </span>
+                          </div>
+                        }
+                      />
                     );
                   }}
                 />

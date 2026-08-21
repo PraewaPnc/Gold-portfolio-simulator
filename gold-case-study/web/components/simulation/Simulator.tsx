@@ -2,6 +2,7 @@
 
 import { Coins, Maximize2, TrendingUp, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Area,
   Bar,
@@ -16,6 +17,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { ChartTooltip } from "@/components/ChartTooltip";
 import { InfoHint } from "@/components/InfoHint";
 import { RiskSeesaw } from "@/components/simulation/RiskSeesaw";
 import { convertAmount, currencySymbol, defaultCapital, unitLabel } from "@/lib/currency";
@@ -387,7 +389,12 @@ export function Simulator() {
         </aside>
 
         {/* ================= Main ================= */}
-        <div className="min-w-0 p-5 sm:p-6">
+        <div className="relative min-w-0 p-5 sm:p-6 ambient-glow-center overflow-hidden">
+          {/* แสง Ambient Gold Glow พื้นหลังของกราฟจำลอง */}
+          <div
+            className="pointer-events-none absolute right-4 top-12 h-[380px] w-[380px] rounded-full bg-gold/12 blur-[110px]"
+            aria-hidden
+          />
           {/* ---- Allocation bar ---- */}
           <div className="mb-2 flex h-[42px] overflow-hidden rounded-lg border border-line">
             {(
@@ -552,20 +559,34 @@ export function Simulator() {
                   width={58}
                 />
                 <Tooltip
-                  cursor={{ stroke: "#766F60", strokeDasharray: "3 3" }}
+                  cursor={{ stroke: "#C9A227", strokeWidth: 1, strokeDasharray: "3 3", strokeOpacity: 0.6 }}
                   content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null;
                     const d = payload[0]?.payload as { p5: number; p50: number; p95: number };
                     return (
-                      <div className="rounded-lg border border-line bg-panel px-3 py-2.5 font-mono text-xs text-ink shadow-lg">
-                        <div className="mb-1 text-ink-faint">ปีที่ {String(label)}</div>
-                        <div className="tabular">
-                          มัธยฐาน: {money(d.p50)} {unitLabel(currency)}
-                        </div>
-                        <div className="tabular text-ink-faint">
-                          ช่วง 5–95%: {money(d.p5)} – {money(d.p95)}
-                        </div>
-                      </div>
+                      <ChartTooltip
+                        title={`การจำลองปีที่ ${String(label)}`}
+                        badge={{
+                          label: "Monte Carlo",
+                          color: GOLD_LIGHT,
+                          bg: "rgba(232, 199, 102, 0.12)",
+                        }}
+                        items={[
+                          {
+                            key: "p50",
+                            label: "มัธยฐาน (Median)",
+                            value: `${money(d.p50)} ${unitLabel(currency)}`,
+                            color: GOLD_LIGHT,
+                            isStrong: true,
+                          },
+                          {
+                            key: "range",
+                            label: "ช่วง 5% – 95%",
+                            value: `${money(d.p5)} – ${money(d.p95)}`,
+                            color: GOLD,
+                          },
+                        ]}
+                      />
                     );
                   }}
                 />
@@ -618,19 +639,31 @@ export function Simulator() {
                   />
                   <YAxis hide />
                   <Tooltip
-                    cursor={{ fill: "rgba(201,162,39,0.08)" }}
+                    cursor={{ fill: "rgba(201,162,39,0.12)" }}
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null;
                       const d = payload[0].payload as { mid: number; count: number };
+                      const pctOfTotal = ((d.count / N_SIMS) * 100).toFixed(1);
                       return (
-                        <div className="rounded-lg border border-line bg-panel px-3 py-2 font-mono text-xs text-ink shadow-lg">
-                          <div className="tabular">
-                            ~{money(d.mid)} {unitLabel(currency)}
-                          </div>
-                          <div className="tabular text-ink-faint">
-                            {d.count} / {N_SIMS.toLocaleString("th-TH")} รอบ
-                          </div>
-                        </div>
+                        <ChartTooltip
+                          title="ช่วงมูลค่าพอร์ตปลายทาง"
+                          items={[
+                            {
+                              key: "val",
+                              label: "มูลค่าประมาณ",
+                              value: `~${money(d.mid)} ${unitLabel(currency)}`,
+                              color: GOLD_LIGHT,
+                              isStrong: true,
+                            },
+                            {
+                              key: "freq",
+                              label: "ความถี่การจำลอง",
+                              value: `${d.count.toLocaleString("th-TH")} รอบ`,
+                              subValue: `(${pctOfTotal}%)`,
+                              color: "#8E8778",
+                            },
+                          ]}
+                        />
                       );
                     }}
                   />
@@ -670,48 +703,51 @@ export function Simulator() {
       </div>
 
       {/*
-        หน้าต่างขยายตาราง — ใช้ fixed จึงไม่ถูก overflow-hidden ของพาเนลตัด
+        หน้าต่างขยายตาราง — ใช้ createPortal ไปยัง document.body เพื่อการันตีเลย์เอาต์ fixed เต็มจอ
         ปิดได้ด้วยปุ่ม X, กด Escape หรือคลิกพื้นหลัง
       */}
-      {tableOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-bg/80 p-4 backdrop-blur-sm"
-          onClick={() => setTableOpen(false)}
-        >
+      {tableOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
           <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="ตารางเปรียบเทียบ 4 Persona"
-            className="panel max-h-[88vh] w-full max-w-5xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-bg/80 p-4 backdrop-blur-sm"
+            onClick={() => setTableOpen(false)}
           >
-            <div className="flex items-start justify-between gap-3 border-b border-line p-5">
-              <div>
-                <h3 className="text-sm font-medium text-ink">เปรียบเทียบ 4 Persona</h3>
-                <p className="mt-1 text-xs leading-relaxed text-ink-faint">
-                  ผลลัพธ์เมื่อแต่ละ persona เริ่มด้วยเงิน {money(capital)} {unitLabel(currency)}{" "}
-                  (simulation{" "}
-                  {N_SIMS_PERSONA} รอบต่อ persona) · คอลัมน์ทองคำเป็นสัดส่วนของส่วนที่ลงทุน
-                  ส่วนเงินสดเป็นสัดส่วนของเงินทั้งก้อน
-                </p>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="ตารางเปรียบเทียบ 4 Persona"
+              className="panel max-h-[88vh] w-full max-w-5xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-3 border-b border-line p-5">
+                <div>
+                  <h3 className="text-sm font-medium text-ink">เปรียบเทียบ 4 Persona</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-ink-faint">
+                    ผลลัพธ์เมื่อแต่ละ persona เริ่มด้วยเงิน {money(capital)} {unitLabel(currency)}{" "}
+                    (simulation{" "}
+                    {N_SIMS_PERSONA} รอบต่อ persona) · คอลัมน์ทองคำเป็นสัดส่วนของส่วนที่ลงทุน
+                    ส่วนเงินสดเป็นสัดส่วนของเงินทั้งก้อน
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTableOpen(false)}
+                  aria-label="ปิดหน้าต่าง"
+                  autoFocus
+                  className="inline-flex flex-none rounded-md border border-line p-1.5 text-ink-dim
+                             transition-colors hover:border-gold/60 hover:text-gold-light"
+                >
+                  <X size={14} aria-hidden />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setTableOpen(false)}
-                aria-label="ปิดหน้าต่าง"
-                autoFocus
-                className="inline-flex flex-none rounded-md border border-line p-1.5 text-ink-dim
-                           transition-colors hover:border-gold/60 hover:text-gold-light"
-              >
-                <X size={14} aria-hidden />
-              </button>
+              <div className="max-h-[calc(88vh-92px)] overflow-auto p-5">
+                <PersonaTable rows={personaRows} activePersona={activePersona} large />
+              </div>
             </div>
-            <div className="max-h-[calc(88vh-92px)] overflow-auto p-5">
-              <PersonaTable rows={personaRows} activePersona={activePersona} large />
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

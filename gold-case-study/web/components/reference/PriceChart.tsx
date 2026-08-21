@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { ChartTooltip, TooltipItem } from "@/components/ChartTooltip";
 import { toCurrencySeries, unitLabel } from "@/lib/currency";
 import { useCurrency } from "@/lib/currency-context";
 import { formatThaiDate, formatThaiMonthYear } from "@/lib/data";
@@ -152,8 +153,13 @@ export function PriceChart({ series }: Props) {
   }, [data]);
 
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+    <div className="relative overflow-hidden rounded-xl ambient-glow-center">
+      {/* แสง Ambient Gold Glow พื้นหลังกราฟเปรียบเทียบ */}
+      <div
+        className="pointer-events-none absolute right-4 top-1/4 h-[320px] w-[320px] rounded-full bg-gold/10 blur-[100px]"
+        aria-hidden
+      />
+      <div className="relative mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-medium text-ink">
             ราคาย้อนหลังเปรียบเทียบ (ฐาน 100, สกุล{unitLabel(currency)})
@@ -219,31 +225,36 @@ export function PriceChart({ series }: Props) {
           ))}
           <ReferenceLine y={100} stroke="#766F60" strokeDasharray="3 3" />
           <Tooltip
-            cursor={{ stroke: "#766F60", strokeDasharray: "3 3" }}
+            cursor={{ stroke: "#C9A227", strokeWidth: 1, strokeDasharray: "3 3", strokeOpacity: 0.6 }}
             content={({ active, payload, label }) => {
               if (!active || !payload?.length) return null;
+              const crisis = crisisAt(String(label));
+              const items = SERIES.map((s) => {
+                const entry = payload.find((p) => p.dataKey === s.key);
+                if (!entry) return null;
+                return {
+                  key: s.key,
+                  label: s.label,
+                  value: Number(entry.value).toFixed(1),
+                  color: s.color,
+                  isStrong: s.key === "gold",
+                };
+              }).filter(Boolean) as TooltipItem[];
+
               return (
-                <div className="rounded-lg border border-line bg-panel px-3 py-2.5 font-mono text-xs text-ink shadow-lg">
-                  <div className="mb-1.5 text-ink-faint">{formatAxisDate(String(label))}</div>
-                  {(() => {
-                    const c = crisisAt(String(label));
-                    return c ? (
-                      <div className="mb-1.5" style={{ color: CRISIS_FILL }}>
-                        ● {c.label}
-                      </div>
-                    ) : null;
-                  })()}
-                  {SERIES.map((s) => {
-                    const entry = payload.find((p) => p.dataKey === s.key);
-                    if (!entry) return null;
-                    return (
-                      <div key={s.key} className="flex justify-between gap-4">
-                        <span style={{ color: s.color }}>{s.label}</span>
-                        <span className="tabular">{Number(entry.value).toFixed(1)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                <ChartTooltip
+                  title={formatAxisDate(String(label))}
+                  badge={
+                    crisis
+                      ? {
+                          label: crisis.label,
+                          color: CRISIS_FILL,
+                          bg: "rgba(178, 90, 74, 0.15)",
+                        }
+                      : null
+                  }
+                  items={items}
+                />
               );
             }}
           />

@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -31,29 +32,43 @@ export function Nav() {
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-3">
-        <ul className="flex items-center gap-1 text-[13px]">
-          {LINKS.map((link) => {
-            const active = pathname === link.href;
-            return (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`inline-block rounded-md px-3 py-1.5 transition-colors ${
-                    active
-                      ? "bg-panel2 font-medium text-gold-light"
-                      : "text-ink-dim hover:bg-panel hover:text-ink"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+          <ul className="flex items-center gap-1 text-[13px]">
+            {LINKS.map((link) => {
+              const active =
+                pathname === link.href ||
+                (link.href !== "/" && pathname.startsWith(link.href));
+              return (
+                <li key={link.href} className="relative">
+                  <Link
+                    href={link.href}
+                    aria-current={active ? "page" : undefined}
+                    className={`relative z-10 inline-block rounded-md px-3 py-1.5 transition-colors duration-200 ${
+                      active
+                        ? "font-medium text-gold-light"
+                        : "text-ink-dim hover:text-ink"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                  {active && (
+                    <motion.div
+                      layoutId="activeNav"
+                      className="absolute inset-0 rounded-md border border-gold/35 bg-panel2 shadow-[0_2px_12px_rgba(0,0,0,0.4),0_0_14px_rgba(201,162,39,0.18)]"
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
           <CurrencyToggle />
         </div>
       </nav>
     </header>
   );
 }
+

@@ -3,6 +3,7 @@ import { Fraunces, IBM_Plex_Mono, IBM_Plex_Sans, IBM_Plex_Sans_Thai } from "next
 
 import { Footer } from "@/components/Footer";
 import { Nav } from "@/components/Nav";
+import { PresentationPointer } from "@/components/PresentationPointer";
 import { CurrencyProvider } from "@/lib/currency-context";
 
 import "./globals.css";
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Nav />
           <main className="flex-1">{children}</main>
           <Footer />
+          <PresentationPointer />
         </CurrencyProvider>
       </body>
     </html>
