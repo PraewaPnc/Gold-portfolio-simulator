@@ -13,7 +13,7 @@ export function SimulationSection() {
         <p className="eyebrow flex items-center gap-1.5">
           <Sparkles size={13} aria-hidden /> Monte Carlo Portfolio Simulator
         </p>
-        <h1 className="mt-3 font-display text-3xl font-semibold">จำลองการจัดสรรเงินลงทุนในทองคำ</h1>
+        <h1 className="mt-3 font-display text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#F9E596] via-[#D1A723] to-[#B38312]">จำลองการจัดสรรเงินลงทุนในทองคำ</h1>
         <p className="mt-3 text-[14.5px] leading-relaxed text-ink-dim">
           เลือก persona ปรับระยะเวลาลงทุน ระดับความเสี่ยง สำรองเงินสด และสัดส่วนทองคำ
           เพื่อดูผลลัพธ์ที่เป็นไปได้ของเงินทั้งก้อน — ผลตอบแทนคาดหวัง ความผันผวน

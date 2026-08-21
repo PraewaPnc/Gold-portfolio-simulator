@@ -12,7 +12,7 @@ export function DcaSection() {
         <p className="eyebrow flex items-center gap-1.5">
           <Repeat size={13} aria-hidden /> Dollar-Cost Averaging Backtest
         </p>
-        <h1 className="mt-3 font-display text-3xl font-semibold">ถ้าทยอยซื้อทองทุกเดือน</h1>
+        <h1 className="mt-3 font-display text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#F9E596] via-[#D1A723] to-[#B38312]">ถ้าทยอยซื้อทองทุกเดือน</h1>
         <p className="mt-3 text-[14.5px] leading-relaxed text-ink-dim">
           กำหนดแผนการลงทุนแบบถัวเฉลี่ยต้นทุน (DCA)
           เพื่อดูการเติบโตของมูลค่าพอร์ตเทียบกับเงินต้นสะสมรายเดือน
