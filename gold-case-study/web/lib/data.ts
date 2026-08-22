@@ -37,16 +37,16 @@ const THAI_MONTHS_SHORT = [
   "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
 ];
 
-/** แปลง "2008-01-31" -> "ม.ค. 2551" (พ.ศ.) */
+/** แปลง "2008-01-31" -> "ม.ค. 2008" (ค.ศ.) */
 export function formatThaiMonthYear(iso: string): string {
   const [y, m] = iso.split("-").map(Number);
-  return `${THAI_MONTHS_SHORT[m - 1]} ${y + 543}`;
+  return `${THAI_MONTHS_SHORT[m - 1]} ${y}`;
 }
 
-/** แปลง "2026-08-07" -> "7 ส.ค. 2569" */
+/** แปลง "2026-08-07" -> "7 ส.ค. 2026" */
 export function formatThaiDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
-  return `${d} ${THAI_MONTHS_SHORT[m - 1]} ${y + 543}`;
+  return `${d} ${THAI_MONTHS_SHORT[m - 1]} ${y}`;
 }
 
 /** แปลง ISO timestamp เป็นวันที่ไทย */
