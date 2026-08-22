@@ -31,7 +31,7 @@ export function ReferenceSection() {
         <p className="eyebrow flex items-center gap-1.5">
           <Database size={13} aria-hidden /> Historical Reference
         </p>
-        <h1 className="mt-3 font-display text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#F9E596] via-[#D1A723] to-[#B38312]">ข้อมูลราคาย้อนหลัง</h1>
+        <h1 className="mt-3 font-display text-4xl font-semibold text-ink">ข้อมูลราคาย้อนหลัง</h1>
         <p className="mt-3 text-[14.5px] leading-relaxed text-ink-dim">
           ข้อมูลย้อนหลังของทองคำ หุ้นสหรัฐฯ (S&amp;P 500) และพันธบัตรรัฐบาลสหรัฐฯ ตั้งแต่{" "}
           {formatThaiDate(dataRange.start)} ถึง {formatThaiDate(dataRange.end)} รวม{" "}
