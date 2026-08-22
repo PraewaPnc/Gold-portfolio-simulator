@@ -49,11 +49,10 @@ const DEFAULT_MONTHLY_THB = 5_000;
 
 export function DcaSimulator() {
   const { currency } = useCurrency();
-  // ค่าตั้งต้นต้องอยู่ในสกุลที่ render ครั้งแรกใช้ ไม่งั้นตัวเลขบาทจะไปโผล่ในหน้าที่คิดเป็นดอลลาร์
-  const [initial, setInitial] = useState(() =>
+  const [initial, setInitial] = useState<number | "">(() =>
     convertAmount(DEFAULT_INITIAL_THB, "thb", assetStats.meta.defaultCurrency),
   );
-  const [monthly, setMonthly] = useState(() =>
+  const [monthly, setMonthly] = useState<number | "">(() =>
     convertAmount(DEFAULT_MONTHLY_THB, "thb", assetStats.meta.defaultCurrency),
   );
   const [years, setYears] = useState(10);
@@ -67,15 +66,15 @@ export function DcaSimulator() {
     if (prevCurrency.current === currency) return;
     const from = prevCurrency.current;
     prevCurrency.current = currency;
-    setInitial((v) => convertAmount(v, from, currency));
-    setMonthly((v) => convertAmount(v, from, currency));
+    setInitial((v) => (v === "" ? "" : convertAmount(v, from, currency)));
+    setMonthly((v) => (v === "" ? "" : convertAmount(v, from, currency)));
   }, [currency]);
 
   /** แปลงราคาทุกงวดเป็นสกุลที่เลือกก่อน การคำนวณ DCA ที่เหลือจึงไม่ต้องรู้เรื่องสกุลเงิน */
   const rows = useMemo(() => toCurrencyMonthly(MONTHLY, currency), [currency]);
 
   const win = useMemo(() => dcaWindow(rows, years, dataRange.end), [rows, years]);
-  const input = useMemo(() => ({ initial, monthly }), [initial, monthly]);
+  const input = useMemo(() => ({ initial: Number(initial) || 0, monthly: Number(monthly) || 0 }), [initial, monthly]);
 
   const result = useMemo(() => runDca(win, PRICE_OF.gold, input), [win, input]);
 
@@ -107,7 +106,10 @@ export function DcaSimulator() {
               step={currency === "thb" ? 10_000 : 500}
               min={0}
               value={initial}
-              onChange={(e) => setInitial(Math.max(0, Number(e.target.value) || 0))}
+              onChange={(e) => {
+                const val = e.target.value;
+                setInitial(val === "" ? "" : Math.max(0, Number(val) || 0));
+              }}
               className="number-input tabular"
             />
             <p className="mt-1 font-mono text-[11px] leading-relaxed text-ink-faint">
@@ -125,7 +127,10 @@ export function DcaSimulator() {
               step={currency === "thb" ? 1_000 : 50}
               min={0}
               value={monthly}
-              onChange={(e) => setMonthly(Math.max(0, Number(e.target.value) || 0))}
+              onChange={(e) => {
+                const val = e.target.value;
+                setMonthly(val === "" ? "" : Math.max(0, Number(val) || 0));
+              }}
               className="number-input tabular"
             />
             <p className="mt-1 font-mono text-[11px] leading-relaxed text-ink-faint">

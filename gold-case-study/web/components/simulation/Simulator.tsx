@@ -132,7 +132,7 @@ function PersonaTable({
 
 export function Simulator() {
   const { currency, stats: marketStats } = useCurrency();
-  const [capital, setCapital] = useState(() => defaultCapital(assetStats.meta.defaultCurrency));
+  const [capital, setCapital] = useState<number | "">(() => defaultCapital(assetStats.meta.defaultCurrency));
   const [horizon, setHorizon] = useState(12);
   const [goldW, setGoldW] = useState(PROFILES.moderate.gold);
   const [cashW, setCashW] = useState(0.1);
@@ -154,7 +154,7 @@ export function Simulator() {
     if (prevCurrency.current === currency) return;
     const from = prevCurrency.current;
     prevCurrency.current = currency;
-    setCapital((c) => convertAmount(c, from, currency));
+    setCapital((c) => (c === "" ? "" : convertAmount(c, from, currency)));
   }, [currency]);
 
   /** เปิด popup แล้วต้องปิดด้วย Escape ได้ และไม่ให้หน้าด้านหลังเลื่อนตาม */
@@ -176,7 +176,7 @@ export function Simulator() {
   const stats = useMemo(() => portfolioStats(weights, model), [weights, model]);
 
   const sim = useMemo(
-    () => runMonteCarlo(weights, horizon, capital, model, N_SIMS),
+    () => runMonteCarlo(weights, horizon, Number(capital) || 0, model, N_SIMS),
     [weights, horizon, capital, model],
   );
 
@@ -200,15 +200,15 @@ export function Simulator() {
   }, [sim.fan]);
 
   const lastFan = sim.fan[sim.fan.length - 1];
-  const medianEnd = lastFan?.p50 ?? capital;
-  const p5End = lastFan?.p5 ?? capital;
+  const medianEnd = lastFan?.p50 ?? (Number(capital) || 0);
+  const p5End = lastFan?.p5 ?? (Number(capital) || 0);
 
   const personaRows = useMemo(
     () =>
       PERSONAS.map((p) => {
         const w = weightsFromGold(p.gold, p.cash);
         const s = portfolioStats(w, model);
-        const pSim = runMonteCarlo(w, p.horizon, capital, model, N_SIMS_PERSONA);
+        const pSim = runMonteCarlo(w, p.horizon, Number(capital) || 0, model, N_SIMS_PERSONA);
         const end = pSim.fan[pSim.fan.length - 1];
         return { ...p, w, s, median: end.p50, p5: end.p5, probLoss: pSim.probLoss };
       }),
@@ -277,7 +277,10 @@ export function Simulator() {
               step={10000}
               min={10000}
               value={capital}
-              onChange={(e) => setCapital(Math.max(10000, Number(e.target.value) || 0))}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCapital(val === "" ? "" : Math.max(0, Number(val) || 0));
+              }}
               className="number-input tabular"
             />
           </div>
@@ -344,8 +347,8 @@ export function Simulator() {
               className="slider"
             />
             <p className="mt-1 font-mono text-[11px] leading-relaxed text-ink-faint">
-              กันไว้ {money(capital * cashW)} {unitLabel(currency)} · เหลือลงทุน{" "}
-              {money(capital * (1 - cashW))} {unitLabel(currency)}
+              กันไว้ {money((Number(capital) || 0) * cashW)} {unitLabel(currency)} · เหลือลงทุน{" "}
+              {money((Number(capital) || 0) * (1 - cashW))} {unitLabel(currency)}
             </p>
           </div>
 
@@ -433,7 +436,7 @@ export function Simulator() {
                   aria-hidden
                 />
                 {item.label} ·{" "}
-                <span className="font-mono tabular">{money(capital * item.w)}</span>{" "}
+                <span className="font-mono tabular">{money((Number(capital) || 0) * item.w)}</span>{" "}
                 {unitLabel(currency)}
               </span>
             ))}
@@ -455,7 +458,7 @@ export function Simulator() {
               [
                 {
                   label: `เงินลงทุนในทองคำ (${unitLabel(currency)})`,
-                  value: money(capital * weights.gold),
+                  value: money((Number(capital) || 0) * weights.gold),
                   accent: true,
                 },
                 {
@@ -598,7 +601,7 @@ export function Simulator() {
                     );
                   }}
                 />
-                <ReferenceLine y={capital} stroke="#766F60" strokeDasharray="3 3" />
+                <ReferenceLine y={Number(capital) || 0} stroke="#766F60" strokeDasharray="3 3" />
                 <Area dataKey="base5" stackId="a" stroke="none" fill="transparent" isAnimationActive={false} />
                 <Area dataKey="range5_95" stackId="a" stroke="none" fill={GOLD} fillOpacity={0.12} isAnimationActive={false} />
                 <Area dataKey="base25" stackId="b" stroke="none" fill="transparent" isAnimationActive={false} />
@@ -675,7 +678,7 @@ export function Simulator() {
                       );
                     }}
                   />
-                  <ReferenceLine x={capital} stroke="#766F60" strokeDasharray="3 3" />
+                  <ReferenceLine x={Number(capital) || 0} stroke="#766F60" strokeDasharray="3 3" />
                   <Bar dataKey="count" fill={GOLD} fillOpacity={0.55} radius={[2, 2, 0, 0]} isAnimationActive={false} />
                 </BarChart>
               </ResponsiveContainer>
@@ -698,7 +701,7 @@ export function Simulator() {
               </button>
             </div>
             <p className="mb-3 mt-1 text-xs text-ink-faint">
-              ผลลัพธ์เมื่อแต่ละ persona เริ่มด้วยเงิน {money(capital)} {unitLabel(currency)}{" "}
+              ผลลัพธ์เมื่อแต่ละ persona เริ่มด้วยเงิน {money(Number(capital) || 0)} {unitLabel(currency)}{" "}
               ตามที่ตั้งไว้ด้านซ้าย
               (simulation {N_SIMS_PERSONA} รอบต่อ persona) · คอลัมน์ทองคำเป็นสัดส่วนของส่วนที่ลงทุน
               ส่วนเงินสดเป็นสัดส่วนของเงินทั้งก้อน
@@ -732,7 +735,7 @@ export function Simulator() {
                 <div>
                   <h3 className="text-sm font-medium text-ink">เปรียบเทียบ 4 Persona</h3>
                   <p className="mt-1 text-xs leading-relaxed text-ink-faint">
-                    ผลลัพธ์เมื่อแต่ละ persona เริ่มด้วยเงิน {money(capital)} {unitLabel(currency)}{" "}
+                    ผลลัพธ์เมื่อแต่ละ persona เริ่มด้วยเงิน {money(Number(capital) || 0)} {unitLabel(currency)}{" "}
                     (simulation{" "}
                     {N_SIMS_PERSONA} รอบต่อ persona) · คอลัมน์ทองคำเป็นสัดส่วนของส่วนที่ลงทุน
                     ส่วนเงินสดเป็นสัดส่วนของเงินทั้งก้อน
