@@ -65,8 +65,8 @@ export function Nav() {
           <span className="font-display text-[15px] font-semibold">การจัดสรรเงินลงทุนในทองคำ</span>
         </Link>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <ul className="flex items-center gap-1 text-[13px]">
+        <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-3">
+          <ul className="flex flex-1 items-center gap-1 overflow-x-auto whitespace-nowrap text-[13px] no-scrollbar">
             {LINKS.map((link) => {
               // Active if we are on the homepage and the hash matches the visible section,
               // or if we are on a subpage that falls under this link (e.g. /reference/gold)

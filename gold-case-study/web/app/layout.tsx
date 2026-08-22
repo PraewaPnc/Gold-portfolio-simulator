@@ -63,7 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         } as React.CSSProperties
       }
     >
-      <body className="flex min-h-screen flex-col">
+      <body className="flex min-h-screen flex-col overflow-x-hidden text-ink bg-bg">
         <CurrencyProvider>
           <Nav />
           <main className="flex-1">{children}</main>
