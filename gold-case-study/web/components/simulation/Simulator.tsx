@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { Coins, Maximize2, TrendingUp, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -490,8 +491,15 @@ export function Simulator() {
                 info?: string;
                 infoAlign?: "left" | "right";
               }[]
-            ).map((card) => (
-              <div key={card.label} className="rounded-[10px] border border-line bg-panel2/50 px-4 py-3.5">
+            ).map((card, i) => (
+              <motion.div
+                key={card.label}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
+                className="rounded-[10px] border border-line bg-panel2/50 px-4 py-3.5"
+              >
                 <p className="label-caps flex items-center gap-1.5">
                   {card.label}
                   {card.info ? (
@@ -509,7 +517,7 @@ export function Simulator() {
                 >
                   {card.value}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
 

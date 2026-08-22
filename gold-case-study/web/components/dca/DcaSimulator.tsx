@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { CalendarClock, TrendingUp } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -185,12 +186,12 @@ export function DcaSimulator() {
           <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
               {
-                label: `เงินที่ลงทุนไปทั้งหมด (${unitLabel(currency)})`,
+                label: `เงินทุนสะสม (${unitLabel(currency)})`,
                 value: money(result.invested),
                 tone: "ink",
               },
               {
-                label: `มูลค่ารวมปัจจุบัน (${unitLabel(currency)})`,
+                label: `มูลค่าปัจจุบัน (${unitLabel(currency)})`,
                 value: money(result.value),
                 tone: "gold",
               },
@@ -201,7 +202,7 @@ export function DcaSimulator() {
                 tone: positive ? "gold" : "danger",
               },
               {
-                label: "ผลตอบแทนรายปี (IRR)",
+                label: "ผลตอบแทน (IRR)",
                 value: pct(result.irr),
                 sub: "ถ่วงน้ำหนักด้วยเงินและเวลา",
                 tone: result.irr >= 0 ? "ink" : "danger",
@@ -211,9 +212,13 @@ export function DcaSimulator() {
                   "สูตร: หา r ที่ทำให้ Σ (เงินงวดที่ i ÷ (1+r)ⁱ) = 0 " +
                   "แล้วแปลงเป็นรายปีด้วย (1+r)¹² − 1",
               },
-            ].map((card) => (
-              <div
+            ].map((card, i) => (
+              <motion.div
                 key={card.label}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
                 className="rounded-[10px] border border-line bg-panel2/50 px-4 py-3.5"
               >
                 <p className="label-caps flex items-center gap-1.5">
@@ -236,7 +241,7 @@ export function DcaSimulator() {
                 {card.sub ? (
                   <p className="mt-1 font-mono text-[11px] tabular text-ink-faint">{card.sub}</p>
                 ) : null}
-              </div>
+              </motion.div>
             ))}
           </div>
 
