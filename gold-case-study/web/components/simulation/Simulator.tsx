@@ -458,7 +458,7 @@ export function Simulator() {
                   accent: true,
                 },
                 {
-                  label: "ผลตอบแทนคาดหวัง / ปี",
+                  label: "ผลตอบแทนต่อปี",
                   value: pct(stats.ret),
                   info:
                     "ค่าเฉลี่ยผลตอบแทนต่อปีของทั้งพอร์ต ถ่วงน้ำหนักตามสัดส่วนที่ถือ · " +
